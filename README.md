@@ -4,6 +4,7 @@ Web application and clues for ethics escape room about torture.
 
 - Blog Article about the Escape Room (Coming Soon)
 - [Digital Clues on Glitch](https://glitch.com/~ethicsescape)
+- [Live Website on Glitch](https://ethicsescape.glitch.me/)
 
 ## Instructions
 
