@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ethics Escape Room</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js"></script>
+    <script src="https://cdn.rawgit.com/beautify-web/js-beautify/v1.6.3/js/lib/beautify-html.js"></script>
+    <style type="text/css">
+        
+        .control .input {
+            width: 200px;
+        }
+
+        .is-hidden {
+            display: none;
+        }
+
+        #combo-code {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <section class="section content">
+        
+        <h1>Enter a Clue Code</h1>
+        <div id="clue-code" class="control">
+            <input class="input" type="text">
+            <input class="button is-primary" type="button" value="Submit">
+        </div>
+
+        <h1>Document Viewer</h1>
+        <div id="combo-code" class="control is-hidden">
+            <p>Document look funny? Enter the password to decode it.</p>
+            <input class="input" type="text">
+            <input class="button is-primary" type="button" value="Decode">
+        </div>
+
+        <div id="file-body">
+            <pre>If the clue code is valid, a document will appear here.</pre>
+        </div>
+
+    </section>
+
+    <script type="text/javascript" src="./main.js"></script>
+
+</body>
+</html>
