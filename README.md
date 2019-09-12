@@ -2,7 +2,7 @@
 
 Web application and clues for ethics escape room about torture.
 
-- Blog Article about the Escape Room (Coming Soon)
+- [Blog Article about the Escape Room](https://blog.codingitforward.com/ethics-escape-room-f0c067333a23)
 - [Digital Clues on Glitch](https://glitch.com/~ethicsescape)
 - [Live Website on Glitch](https://ethicsescape.glitch.me/)
 
