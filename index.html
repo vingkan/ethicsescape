@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethics Escape Room - Introduction</title>
+    <link rel="stylesheet" href="css/game.css">
+    <style>
+        .intro-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        
+        .intro-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .intro-header h1 {
+            color: var(--text-amber);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .intro-header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-style: italic;
+        }
+        
+        .intro-content {
+            background: var(--bg-panel);
+            border: 2px solid var(--border-color);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .intro-content h2 {
+            color: var(--text-amber);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .intro-content h2:first-child {
+            margin-top: 0;
+        }
+        
+        .warning-box {
+            background: var(--accent-red);
+            border: 2px solid var(--text-red);
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .warning-box h3 {
+            color: var(--text-red);
+            margin-bottom: 0.5rem;
+        }
+        
+        .rules-list {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .rules-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .start-button {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 3rem auto;
+            padding: 1.5rem 3rem;
+            background: var(--accent-green);
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .start-button:hover {
+            background: var(--text-amber);
+            color: var(--bg-dark);
+            transform: scale(1.05);
+        }
+        
+        .credits {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="intro-container">
+        <div class="intro-header">
+            <h1>Ethics Escape Room</h1>
+            <p class="subtitle">Bringing a classic thought experiment to life</p>
+        </div>
+        
+        <div class="intro-content">
+            <div class="warning-box">
+                <h3>⚠️ Content Warning</h3>
+                <p>The escape room explores the ethical debate around torture as an interrogational practice. The activity does not contain any graphic content, but the topic may be unsettling to some people.</p>
+            </div>
+            
+            <h2>Welcome</h2>
+            <p>Welcome to the Department of Homeland Security (DHS). You work for a team called the Moral Defense Oversight Service (MDOS) that provides ethical guidance to DHS. We have invited you to take part in a serious, classified case that concerns the safety of your fellow Americans.</p>
+            
+            <p>In particular, we have been notified of a possible terrorist attack that if credible will occur within the next 24 hours. We are asking for your guidance to help shape how we conduct our investigation in an ethical yet timely manner. In particular, we want you to design an authorization form regarding intelligence procurement from suspects.</p>
+            
+            <p>The room you are in is secure and full of documents that may be of interest. Unfortunately, we were informed too late of the scenario to organize briefing materials or decode documents. All briefing materials are present in the room but need to be found and all codes are in the form of a number. When you have decided on a form, please submit it in the box below.</p>
+            
+            <p>Please be mindful of the time you take for this very important decision. We only have 24 hours to gather intelligence and act on the threat at hand, meaning we need a final authorization form in less than one hour. We will check up on you throughout this hour for updates.</p>
+            
+            <h2>How to Play</h2>
+            <ul class="rules-list">
+                <li>You have <strong>60 minutes</strong> to complete the escape room</li>
+                <li>Explore the digital environment to discover clues and documents</li>
+                <li>Some documents are encoded and require codes to unlock</li>
+                <li>Solve ethical puzzles to progress through the game</li>
+                <li>All discovered clues will be saved in your sidebar for reference</li>
+                <li>When time expires, you must select one of the authorization forms</li>
+                <li>Your progress is automatically saved - you can close and resume later</li>
+            </ul>
+            
+            <h2>Objective</h2>
+            <p>Your goal is to gather information about the ethical dimensions of this scenario and decide which authorization form should be used for interrogating the suspect. You may discover a third, custom form option through your investigation.</p>
+        </div>
+        
+        <div class="intro-content" id="team-selection-section">
+            <h2>Team Selection</h2>
+            <p>Enter your team members (1-6 players). Each player will independently enter their team on their device.</p>
+            <div id="team-slots"></div>
+            <button onclick="addTeamSlot()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">+ Add Player</button>
+            <p id="team-error" style="color: var(--text-red); display: none; margin-top: 1rem;"></p>
+        </div>
+        
+        <button class="start-button" onclick="startGame()" id="start-game-btn">Start Game</button>
+        
+        <div class="credits">
+            <p>Produced by Christina Qiu, Maria Gargiulo, Vinesh Kannan, and Zhi Keng He.</p>
+            <p>Thank you to Coding It Forward and all the players who tested the game!</p>
+        </div>
+    </div>
+    
+    <script src="js/game.js"></script>
+    <script>
+        let teamSlotCount = 0;
+        
+        function addTeamSlot() {
+            if (teamSlotCount >= 6) {
+                document.getElementById('team-error').textContent = 'Maximum 6 players allowed.';
+                document.getElementById('team-error').style.display = 'block';
+                return;
+            }
+            
+            const slots = document.getElementById('team-slots');
+            const slotId = `team-slot-${teamSlotCount}`;
+            const slot = document.createElement('div');
+            slot.id = slotId;
+            slot.style.marginBottom = '1rem';
+            slot.style.display = 'flex';
+            slot.style.alignItems = 'center';
+            slot.style.gap = '1rem';
+            slot.innerHTML = `
+                <input type="text" 
+                       id="player-${teamSlotCount}" 
+                       placeholder="Player ${teamSlotCount + 1} name" 
+                       style="flex: 1; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace;"
+                       onchange="saveTeamData()">
+                <button onclick="removeTeamSlot('${slotId}')" style="padding: 0.5rem 1rem; background: var(--accent-red); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">Remove</button>
+            `;
+            slots.appendChild(slot);
+            teamSlotCount++;
+            saveTeamData();
+        }
+        
+        function removeTeamSlot(slotId) {
+            const slot = document.getElementById(slotId);
+            if (slot) {
+                slot.remove();
+                teamSlotCount--;
+                saveTeamData();
+            }
+        }
+        
+        function saveTeamData() {
+            const teamMembers = [];
+            for (let i = 0; i < teamSlotCount; i++) {
+                const input = document.getElementById(`player-${i}`);
+                if (input && input.value.trim()) {
+                    teamMembers.push(input.value.trim());
+                }
+            }
+            
+            if (teamMembers.length > 0) {
+                localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
+                localStorage.setItem('teamSize', teamMembers.length.toString());
+                document.getElementById('team-error').style.display = 'none';
+            } else {
+                localStorage.removeItem('teamMembers');
+                localStorage.removeItem('teamSize');
+            }
+        }
+        
+        function loadTeamData() {
+            const teamMembers = JSON.parse(localStorage.getItem('teamMembers') || '[]');
+            if (teamMembers.length > 0) {
+                teamSlotCount = 0;
+                const slots = document.getElementById('team-slots');
+                slots.innerHTML = '';
+                teamMembers.forEach((name, index) => {
+                    addTeamSlot();
+                    const input = document.getElementById(`player-${index}`);
+                    if (input) input.value = name;
+                });
+            } else {
+                // Start with one empty slot
+                addTeamSlot();
+            }
+        }
+        
+        function startGame() {
+            const teamMembers = JSON.parse(localStorage.getItem('teamMembers') || '[]');
+            if (teamMembers.length === 0) {
+                document.getElementById('team-error').textContent = 'Please enter at least one team member name.';
+                document.getElementById('team-error').style.display = 'block';
+                return;
+            }
+            
+            // Start a new game
+            GameState.startNewGame();
+            
+            // Redirect to game page
+            window.location.href = 'game.html';
+        }
+        
+        // Load team data on page load
+        window.addEventListener('DOMContentLoaded', loadTeamData);
+    </script>
+</body>
+</html>

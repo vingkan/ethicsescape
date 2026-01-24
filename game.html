@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethics Escape Room - Game</title>
+    <link rel="stylesheet" href="css/game.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="game-header">
+        <div class="game-title">MDOS - Ethics Escape Room</div>
+        <div class="timer-container">
+            <div id="timer-display">60:00</div>
+            <div class="clue-count">Clues: <span id="clue-count">0</span></div>
+            <button id="reset-game-btn" class="reset-button" onclick="UI.showResetConfirmation()">Reset Game</button>
+        </div>
+    </div>
+    
+    <!-- Modal Container -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <div class="sidebar">
+            <h3>Discovered Clues</h3>
+            <div id="discovered-clues">
+                <!-- Clues will be added here dynamically -->
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- Post-it Notes -->
+            <div class="postit-note" id="shue-postit">
+                <div class="postit-content">
+                    <strong>Note:</strong> Check the file cabinet for a paper by Henry Shue. The document is from 1978.
+                </div>
+            </div>
+            
+            <div class="postit-note" id="pager-postit">
+                <div class="postit-content">
+                    <strong>Secure Connection:</strong> Use code 9999 to establish connection to advisor.
+                </div>
+            </div>
+            
+            <!-- Clue Discovery Locations -->
+            <div class="discovery-grid" id="discovery-grid">
+                <!-- Discovery items will be added dynamically -->
+            </div>
+            
+            <!-- Clue Viewer -->
+            <div id="clue-viewer">
+                <div class="clue-header">
+                    <h2>Welcome to MDOS</h2>
+                </div>
+                <div class="clue-content">
+                    <p>Click on the locations above to discover clues and documents. Your mission is to decide which authorization form should be used.</p>
+                    <p>You have 60 minutes. Good luck.</p>
+                </div>
+            </div>
+            
+            <!-- Form Selection View (hidden by default) -->
+            <div id="form-selection-view" style="display: none;">
+                <!-- Forms will be displayed here -->
+            </div>
+            
+            <!-- Custom Form Builder View (hidden by default) -->
+            <div id="custom-form-view" style="display: none;">
+                <!-- Custom form builder will be displayed here -->
+            </div>
+            
+            <!-- Manual Submit Button -->
+            <div style="text-align: center; margin: 2rem 0;">
+                <button onclick="showFormSelection()" id="submit-form-btn" style="display: none; padding: 1rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: pointer; text-transform: uppercase;">
+                    Submit Authorization Form
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/decode.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/clues.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/puzzles.js"></script>
+    <script src="js/game-init.js"></script>
+</body>
+</html>
