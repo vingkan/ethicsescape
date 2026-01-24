@@ -1,6 +1,8 @@
 # Designing an Ethics Escape Room
-Bringing a classic thought experiment to life
-Vinesh Kannan
+
+_Bringing a classic thought experiment to life_
+
+By Vinesh Kannan
 
 People working in social impact care about doing the “right” thing for their users, their fellow citizens, and their society. There is no shortage of policy and technology problems that contain messy ethical questions:
 
@@ -180,6 +182,7 @@ The ethics escape room is frustrating because, unlike a normal escape room, ther
 
 - Identifying important details that shape the ethical context of a scenario
 - Testing alternatives with thought experiments before taking action
+
 If you would like to run this ethics escape room, the materials are on GitHub.
 
 This activity was designed by Christina Qiu, Maria Gargiulo, Vinesh Kannan, and Zhi Keng He. Thank you to Coding It Forward and all the players who tested the game!
