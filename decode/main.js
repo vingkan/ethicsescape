@@ -17,7 +17,7 @@ function decode(encodedMessage, key) {
 }
 
 function loadFile(fileId, el) {
-    return $.get(`./files/${fileId}.md`).then((res) => {
+    return $.get(`../files/${fileId}.md`).then((res) => {
         currentText = res;
         const html = markdownConverter.makeHtml(currentText);
         el.innerHTML = html_beautify(html);

@@ -3,7 +3,7 @@
 Web application and clues for ethics escape room about torture.
 
 - [Blog Article about the Escape Room](https://blog.codingitforward.com/ethics-escape-room-f0c067333a23)
-- [Live Website for Decoding Clues](https://github.com/vingkan/ethicsescape)
+- [Live Website for Decoding Clues](https://vingkan.github.io/ethicsescape/decoder)
 
 ## Physical Room Setup Instructions
 
@@ -22,10 +22,10 @@ node encode.js
 Serve the following directories files on a static website:
 
 - `/files`
-- `index.html`
-- `main.js`
+- `/decode/index.html`
+- `/decode/main.js`
 
-Share the website link with the players and explain how to unlock digital clues.
+Share the website link (`/decode`) with the players and explain how to unlock digital clues.
 
 ## Acknowledgements
 
