@@ -4,6 +4,13 @@ Web application and clues for ethics escape room about torture.
 
 - [Blog Article about the Escape Room](https://blog.codingitforward.com/ethics-escape-room-f0c067333a23)
 - [Live Website for Decoding Clues](https://vingkan.github.io/ethicsescape/decoder)
+- [Fully Digital Version of the Game](https://vingkan.github.io/ethicsescape)
+
+## Digital Game Adaptation
+
+TODO:
+- [ ] Audit game text
+- [ ] Improve puzzle form factor
 
 ## Physical Room Setup Instructions
 

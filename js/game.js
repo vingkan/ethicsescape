@@ -22,6 +22,7 @@ const GameState = {
     startNewGame() {
         // Clear all game state (but keep team data)
         localStorage.removeItem('gameStartTime');
+        localStorage.removeItem('gameFinishedTime');
         localStorage.removeItem('cluesUnlocked');
         localStorage.removeItem('cluesViewed');
         localStorage.removeItem('gameCompleted');
@@ -91,7 +92,10 @@ const GameState = {
         const startTime = parseInt(localStorage.getItem('gameStartTime') || '0');
         if (!startTime) return 0;
         
-        const elapsed = (Date.now() - startTime) / 1000; // seconds
+        const finishedTime = parseInt(localStorage.getItem('gameFinishedTime') || '0');
+        const now = finishedTime ? finishedTime : Date.now();
+        
+        const elapsed = (now - startTime) / 1000; // seconds
         const remaining = Math.max(0, 3600 - elapsed); // 60 minutes = 3600 seconds
         return Math.floor(remaining);
     },
@@ -104,16 +108,8 @@ const GameState = {
             minutes: minutes.toString().padStart(2, '0'),
             seconds: seconds.toString().padStart(2, '0'),
             total: remaining,
-            expired: remaining === 0
+            expired: remaining <= (5 * 60)
         };
-    },
-
-    handleTimeExpired() {
-        if (this.updateTimer().expired) {
-            localStorage.setItem('gameCompleted', 'true');
-            return true;
-        }
-        return false;
     },
 
     isClueUnlocked(clueId) {

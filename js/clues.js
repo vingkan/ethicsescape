@@ -75,16 +75,6 @@ const ClueSystem = {
             requires: 'bentham', // Requires bentham to be completed
             unlockMethod: 'puzzle'
         },
-        'steinhoff-content': {
-            id: 'steinhoff-content',
-            name: 'Steinhoff Examples',
-            file: 'original/steinhoff.md',
-            encoded: false,
-            key: '5345',
-            unlocked: false,
-            requires: 'steinhoff',
-            unlockMethod: 'puzzle'
-        },
         'historical-records': {
             id: 'historical-records',
             name: 'Historical Records',
@@ -92,7 +82,7 @@ const ClueSystem = {
             encoded: false,
             key: '7031',
             unlocked: false,
-            requires: 'steinhoff-content',
+            requires: 'steinhoff',
             unlockMethod: 'puzzle'
         },
         'intervening-action': {
@@ -217,9 +207,8 @@ const ClueSystem = {
     // Puzzle validation functions
     validateBenthamScales(answers) {
         // Expected values based on advisor assessment
-        // Advisor says threat is credible, rare but not unprecedented, life-saving info possible
-        // Intensity: high (4), Duration: medium (3), Certainty: medium-high (3), Nearness: very high (5)
-        const expected = { intensity: 4, duration: 3, certainty: 3, nearness: 5 };
+        // Intensity: 5, Duration: 3, Certainty: 4, Nearness: 5
+        const expected = { intensity: 5, duration: 3, certainty: 4, nearness: 5 };
         
         return answers.intensity === expected.intensity &&
                answers.duration === expected.duration &&
@@ -228,24 +217,24 @@ const ClueSystem = {
     },
 
     validateSteinhoffMatching(matches) {
-        // Based on the examples and definitions:
-        // Example 0 (painless ray gun, 10 years future) -> Imminence (NOT imminent)
-        // Example 1 (steal, could knock unconscious) -> Mildest Means
-        // Example 3 (tried to kill, missed, ran away) -> Proportionality
-        // Example 7 (tried to kill, could kill or knock out) -> Necessity
+        if (!matches) return false;
         
-        // The key "5345" is formed from the example numbers in the order they appear in definitions
-        // Necessity -> 7, Imminence -> 0, Mildest Means -> 1, Proportionality -> 3
-        // But that would be 7,0,1,3 not 5,3,4,5...
+        // Normalize definition names (from markdown headings) to simple keys
+        const normalized = {};
+        Object.keys(matches).forEach(name => {
+            const key = name.toLowerCase().replace(/\s+/g, '-');
+            normalized[key] = matches[name];
+        });
         
-        // Actually, the key might be the order of definitions: Necessity, Imminence, Mildest Means, Proportionality
-        // If matched correctly, we get: 7, 0, 1, 3
-        // But encode.js shows key "5345"
-        
-        // For now, accept if all 4 definitions are matched to examples
-        // The actual validation might need to check specific matches
-        return matches && Object.keys(matches).length === 4 && 
-               Object.values(matches).every(v => ['0', '1', '3', '7'].includes(v));
+        // Correct mapping:
+        // Necessity        -> Example 7
+        // Imminence        -> Example 0
+        // Mildest Means    -> Example 3
+        // Proportionality  -> Example 1
+        return normalized['necessity'] === '7' &&
+               normalized['imminence'] === '0' &&
+               normalized['mildest-means'] === '3' &&
+               normalized['proportionality'] === '1';
     },
 
     validateHistoricalRecords(classifications) {

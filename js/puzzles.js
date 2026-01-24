@@ -95,9 +95,8 @@ const Puzzles = {
         const errorEl = document.getElementById('bentham-error');
         
         if (ClueSystem.validateBenthamScales(answers)) {
-            // Correct! Unlock Bentham and Steinhoff clues
+            // Correct! Unlock Bentham; Steinhoff becomes available via its 'requires' on Bentham
             GameState.unlockClue('bentham');
-            GameState.unlockClue('steinhoff'); // Unlock Steinhoff so it appears
             localStorage.setItem('benthamAnswers', JSON.stringify(answers));
             
             // Show success message and unlock Steinhoff
@@ -234,16 +233,22 @@ const Puzzles = {
         const errorEl = document.getElementById('steinhoff-error');
         
         if (ClueSystem.validateSteinhoffMatching(matches)) {
-            // Correct! The key should be formed from example numbers: 0, 1, 3, 7
-            // But we need "5345" - this might need adjustment based on actual puzzle logic
-            // For now, if all 4 are matched, unlock
+            // Correct! All four definitions are matched to the right examples
             GameState.unlockClue('steinhoff');
-            GameState.unlockClue('steinhoff-content');
             localStorage.setItem('steinhoffMatches', JSON.stringify(matches));
             
-            // Show steinhoff content
-            const content = await ClueSystem.loadClueContent('steinhoff-content');
-            UI.showClue('steinhoff-content', content);
+            // Show a brief success message in the current view
+            const viewer = document.getElementById('clue-viewer');
+            if (viewer) {
+                viewer.innerHTML += `
+                    <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
+                        <p style="color: var(--text-primary); margin: 0;">
+                            <strong>Matching Complete!</strong> You have correctly matched Steinhoff's definitions to their examples.
+                            The Historical Records puzzle is now available in the discovery grid.
+                        </p>
+                    </div>
+                `;
+            }
             UI.updateClueCount();
             
             // Refresh discovery locations to show historical records
@@ -340,9 +345,9 @@ const Puzzles = {
         if (ClueSystem.validateHistoricalRecords(classifications)) {
             const code = ClueSystem.getHistoricalRecordsCode(classifications);
             
-            // Only unlock if validation passed
+            // Only unlock Historical Records when its own puzzle is solved;
+            // Intervening Action becomes available via its 'requires' on historical-records
             GameState.unlockClue('historical-records');
-            GameState.unlockClue('intervening-action'); // Unlock intervening action so it appears
             localStorage.setItem('historicalRecords', JSON.stringify(classifications));
             
             // Show historical records content
@@ -350,7 +355,7 @@ const Puzzles = {
             UI.showClue('historical-records', content);
             UI.updateClueCount();
             
-            // Refresh discovery locations to show intervening action
+            // Refresh discovery locations so Intervening Action appears
             if (typeof setupDiscoveryLocations === 'function') {
                 setupDiscoveryLocations();
             }
@@ -444,7 +449,8 @@ const Puzzles = {
         
         if (ClueSystem.validateInterveningAction(selected)) {
             GameState.unlockClue('intervening-action');
-            GameState.unlockClue('pamphlet'); // Unlock pamphlet so it appears
+            // We also have to unlock the pamphlet here so that it can be accessed.
+            GameState.unlockClue('pamphlet');
             localStorage.setItem('interveningAction', JSON.stringify(selected));
             
             // Show pamphlet (unlock with code from selected statements)
@@ -506,6 +512,7 @@ const Puzzles = {
         if (ClueSystem.validateDirtyHarryStory(story)) {
             // Correct!
             GameState.unlockClue('dirty-harry');
+            // We also have to unlock the custom form here so that it can be accessed.
             GameState.unlockClue('custom-form');
             localStorage.setItem('dirtyHarryStory', story);
             
@@ -527,8 +534,12 @@ const Puzzles = {
             `;
             
             UI.showPuzzle('custom-form', html);
-            UI.addClueToSidebar('custom-form', 'Custom Authorization Form');
             UI.updateClueCount();
+            
+            // Refresh discovery locations so Dirty Harry shows as completed
+            if (typeof setupDiscoveryLocations === 'function') {
+                setupDiscoveryLocations();
+            }
         } else {
             // Provide feedback
             const lowerStory = story.toLowerCase();

@@ -78,7 +78,7 @@ const discoveryLocations = [
         clueId: 'historical-records',
         type: 'puzzle',
         description: 'Unlocked after Steinhoff',
-        requires: 'steinhoff-content'
+        requires: 'steinhoff'
     },
     {
         id: 'intervening-doc',
@@ -123,14 +123,16 @@ async function initGame() {
     // Setup discovery locations
     setupDiscoveryLocations();
     
-    // Check if game is completed
+    // Configure submit button and initial view based on completion state
     if (GameState.isGameCompleted()) {
+        // Completed game: allow players to go directly to the form selection
         showFormSelection();
     } else {
-        // Show manual submit button
+        // In-progress game: show submit button to open form selection
         const submitBtn = document.getElementById('submit-form-btn');
         if (submitBtn) {
             submitBtn.style.display = 'block';
+            submitBtn.textContent = 'Submit Authorization Form';
         }
     }
 }
@@ -141,15 +143,6 @@ async function loadInitialContent() {
         const briefingContent = await ClueSystem.loadClueContent('briefing');
         UI.showClue('briefing', briefingContent);
     }
-    
-    // Load previously unlocked clues into sidebar
-    const unlocked = GameState.getUnlockedClues();
-    for (const clueId of unlocked) {
-        const clue = ClueSystem.getClue(clueId);
-        if (clue) {
-            UI.addClueToSidebar(clueId, clue.name);
-        }
-    }
 }
 
 function setupDiscoveryLocations() {
@@ -157,6 +150,21 @@ function setupDiscoveryLocations() {
     if (!grid) return;
     
     grid.innerHTML = '';
+    
+    // Ensure Dirty Harry location persists after reload if the clue is already unlocked
+    if (GameState.isClueUnlocked('dirty-harry')) {
+        const hasDirtyHarry = discoveryLocations.some(location => location.clueId === 'dirty-harry');
+        if (!hasDirtyHarry) {
+            discoveryLocations.push({
+                id: 'dirty-harry-trigger',
+                icon: '🎬',
+                label: 'Dirty Harry Scenario',
+                clueId: 'dirty-harry',
+                type: 'puzzle',
+                description: 'Write a scenario based on your chosen form'
+            });
+        }
+    }
     
     discoveryLocations.forEach(location => {
         // Check if location should be visible (requirements met)
@@ -271,7 +279,7 @@ async function handleDiscoveryClick(location) {
                             <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0;">
                                 <em>Enter the connection code to receive the transmission.</em>
                             </p>
-                            <input type="text" id="code-input" placeholder="Enter connection code" maxlength="10">
+                            <input type="text" id="code-input" placeholder="Enter connection code" autocomplete="off" maxlength="10">
                             <button onclick="UI.submitCode('${location.clueId}')">Establish Connection</button>
                             <p id="code-error" class="error-message" style="display:none;"></p>
                         </div>
@@ -288,11 +296,7 @@ async function handleDiscoveryClick(location) {
                     }
                 }
             } else {
-                UI.showCodeInput(location.clueId, () => {
-                    const item = document.getElementById(`discovery-${location.id}`);
-                    if (item) item.classList.add('discovered');
-                    UI.updateClueCount();
-                });
+                UI.showCodeInput(location.clueId);
             }
         }
         
@@ -310,10 +314,8 @@ async function handleDiscoveryClick(location) {
             Puzzles.showDirtyHarry();
         }
         
-        // Mark puzzle location as discovered when shown
-        GameState.unlockClue(location.clueId);
-        const item = document.getElementById(`discovery-${location.id}`);
-        if (item) item.classList.add('discovered');
+        // Don't unlock or mark as discovered here - puzzles unlock when completed
+        // The checkmark will appear after the puzzle is completed and setupDiscoveryLocations is called
         
     } else if (location.type === 'special') {
         // Special handling
@@ -329,13 +331,47 @@ function showMDOSChart() {
             <h2>MDOS Decision Matrix</h2>
             <p>The following questions introduce dimensions of the ethical debate:</p>
             <div class="mdos-chart">
+                <!-- Row 1: Questions -->
                 <div class="chart-cell question">Is enhanced interrogation justified if the threat may be fake?</div>
                 <div class="chart-cell question">Is enhanced interrogation justified even if it may not work?</div>
                 <div class="chart-cell question">Is enhanced interrogation justified if someone else performs it?</div>
+
+                <!-- Row 2: Yes answers and clues -->
+                <div class="chart-cell">
+                    <div class="mdos-answer-label yes">Yes</div>
+                    <div class="mdos-answer-clue">Bentham</div>
+                </div>
+                <div class="chart-cell">
+                    <div class="mdos-answer-label yes">Yes</div>
+                    <div class="mdos-answer-clue">Steinhoff</div>
+                </div>
+                <div class="chart-cell">
+                    <div class="mdos-answer-label yes">Yes</div>
+                    <div class="mdos-answer-clue">Intervening Action</div>
+                </div>
+
+                <!-- Row 3: No answers and clues -->
+                <div class="chart-cell">
+                    <div class="mdos-answer-label no">No</div>
+                    <div class="mdos-answer-clue">Shue</div>
+                </div>
+                <div class="chart-cell">
+                    <div class="mdos-answer-label no">No</div>
+                    <div class="mdos-answer-clue">Pamphlet</div>
+                </div>
+                <div class="chart-cell">
+                    <div class="mdos-answer-label no">No</div>
+                    <div class="mdos-answer-clue">Dirty Harry</div>
+                </div>
             </div>
             <p style="margin-top: 1rem; color: var(--text-secondary);">
                 These questions hint at the existence of clues that relate to each question.
             </p>
+            <div class="postit-note" id="shue-postit">
+                <div class="postit-content">
+                    <strong>Note:</strong> Check the file cabinet for a paper by Henry Shue. The document is from 1978.
+                </div>
+            </div>
         </div>
     `;
     
@@ -374,11 +410,23 @@ function handleTimeExpired() {
         item.style.opacity = '0.5';
     });
     
-    // Show form selection
-    showFormSelection();
-    
-    // Show notification
-    alert('Time has expired. You must now select an authorization form.');
+    // Prompt player via modal to proceed to decision page
+    if (typeof UI !== 'undefined' && typeof UI.showModal === 'function') {
+        UI.showModal(
+            'Decision Time',
+            'Time is running out. You must now select an authorization form.',
+            [
+                {
+                    text: 'Continue to Decision',
+                    class: 'modal-button-primary',
+                    onclick: 'UI.hideModal(); showFormSelection();'
+                }
+            ]
+        );
+    } else {
+        // Fallback if modal is unavailable
+        showFormSelection();
+    }
 }
 
 function showFormSelection() {

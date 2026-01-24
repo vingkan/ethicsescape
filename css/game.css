@@ -14,6 +14,7 @@
     --accent-green: #2d5a2d;
     --accent-red: #5a2d2d;
     --warning: #ffaa00;
+    color-scheme: only dark;
 }
 
 * {
@@ -28,6 +29,49 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+/* Base typography */
+h1 {
+    font-size: 2rem;
+    margin: 1rem 0;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 1.6rem;
+    margin: 0.75rem 0;
+    font-weight: bold;
+}
+
+h3 {
+    font-size: 1.3rem;
+    margin: 0.5rem 0;
+    font-weight: bold;
+}
+
+h4 {
+    font-size: 1.1rem;
+    margin: 0.5rem 0;
+    font-weight: bold;
+}
+
+ul,
+ol {
+    list-style-type: disc;
+}
+
+li {
+    margin-left: -0.5rem;
+}
+
+strong {
+    font-weight: bold;
+}
+
+p {
+    margin: 0.5rem 0;
 }
 
 /* Header */
@@ -49,6 +93,7 @@ body {
     color: var(--text-amber);
     text-transform: uppercase;
     letter-spacing: 2px;
+    font-weight: bold;
 }
 
 .timer-container {
@@ -77,13 +122,27 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
 }
 
 .clue-count {
@@ -112,51 +171,12 @@ body {
 
 /* Main Layout */
 .game-container {
-    display: flex;
     min-height: calc(100vh - 80px);
-}
-
-/* Sidebar */
-.sidebar {
-    width: 250px;
-    background: var(--bg-panel);
-    border-right: 2px solid var(--border-color);
-    padding: 1.5rem;
-    overflow-y: auto;
-    max-height: calc(100vh - 80px);
-}
-
-.sidebar h3 {
-    color: var(--text-amber);
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.clue-item {
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    background: var(--bg-darker);
-    border-left: 3px solid var(--accent-green);
-    transition: all 0.2s;
-}
-
-.clue-item:hover {
-    background: var(--accent-green);
-    transform: translateX(5px);
-}
-
-.clue-item a {
-    color: var(--text-primary);
-    text-decoration: none;
-    display: block;
-    font-size: 0.85rem;
 }
 
 /* Main Content */
 .main-content {
-    flex: 1;
+    width: 100%;
     padding: 2rem;
     overflow-y: auto;
     max-height: calc(100vh - 80px);
@@ -208,9 +228,17 @@ body {
 }
 
 @keyframes discover {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 .discovery-item.discovered {
@@ -429,13 +457,9 @@ body {
 .form-selection-header {
     margin-bottom: 2rem;
     text-align: center;
-    position: relative;
 }
 
 .back-button {
-    position: absolute;
-    left: 0;
-    top: 0;
     background: var(--bg-darker);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
@@ -446,6 +470,8 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
     transition: all 0.2s;
+    display: inline-block;
+    margin-bottom: 1rem;
 }
 
 .back-button:hover {
@@ -456,7 +482,7 @@ body {
 .form-selection-header h2 {
     color: var(--text-amber);
     margin-bottom: 1rem;
-    margin-top: 2.5rem;
+    margin-top: 0;
 }
 
 /* Modal */
@@ -624,6 +650,10 @@ body {
 }
 
 /* MDOS Chart */
+.mdos-chart-container {
+    position: relative;
+}
+
 .mdos-chart {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -643,48 +673,57 @@ body {
     font-weight: bold;
 }
 
+.mdos-answer-label {
+    display: block;
+    font-weight: bold;
+    color: var(--text-red);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+.mdos-answer-clue {
+    color: var(--text-amber);
+    font-weight: bold;
+}
+
+.mdos-chart-container #shue-postit {
+    top: auto;
+    bottom: -7.5rem;
+    left: 0.75rem;
+    right: auto;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-    .game-container {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        max-height: 200px;
-        border-right: none;
-        border-bottom: 2px solid var(--border-color);
-    }
-    
     .discovery-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
-    
+
     .matching-puzzle {
         grid-template-columns: 1fr;
     }
-    
+
     .forms-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .game-header {
         flex-direction: column;
         gap: 1rem;
         padding: 1rem;
     }
-    
+
     #timer-display {
         font-size: 1.5rem;
     }
-    
+
     .postit-note {
         position: relative;
         float: none;
         margin: 1rem 0;
         max-width: 100%;
     }
-    
+
     #shue-postit,
     #pager-postit {
         top: auto;
@@ -696,11 +735,11 @@ body {
     .main-content {
         padding: 1rem;
     }
-    
+
     #clue-viewer {
         padding: 1rem;
     }
-    
+
     .discovery-grid {
         grid-template-columns: 1fr;
     }
@@ -733,7 +772,7 @@ body {
 }
 
 #pager-postit {
-    top: 120px;
+    top: 175px;
     right: 20px;
     transform: rotate(2deg);
 }
@@ -764,16 +803,31 @@ body {
         background: white;
         color: black;
     }
-    
+
     .game-header,
-    .sidebar,
     .discovery-grid,
     #form-selection,
     .postit-note {
         display: none;
     }
-    
+
     .main-content {
         padding: 0;
     }
+}
+
+/* Disabled form controls */
+select:disabled,
+textarea:disabled,
+textarea[readonly] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.record-item select:disabled,
+.record-item textarea:disabled,
+.record-item textarea[readonly] {
+    background: var(--bg-darker);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
 }

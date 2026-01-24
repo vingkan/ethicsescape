@@ -16,6 +16,12 @@ const UI = {
             });
         }
     },
+    
+    viewFinalResults() {
+        const formId = GameState.getSelectedForm();
+        if (!formId) return;
+        this.selectForm(formId);
+    },
 
     renderMarkdown(markdown) {
         if (!markdown) return '';
@@ -40,6 +46,16 @@ const UI = {
         }).join('');
     },
 
+    escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, (c) => {
+            if (c === '&') return '&amp;';
+            if (c === '<') return '&lt;';
+            if (c === '>') return '&gt;';
+            return c;
+        });
+    },
+
     updateTimer(display) {
         const timerEl = document.getElementById('timer-display');
         if (timerEl) {
@@ -57,8 +73,14 @@ const UI = {
     updateClueCount() {
         const countEl = document.getElementById('clue-count');
         if (countEl) {
-            const count = GameState.getUnlockedClues().length;
-            countEl.textContent = count;
+            // Exclude the endgame "truth" clue from progress totals
+            const allClueIds = Object.keys(ClueSystem.clues).filter(id => id !== 'truth');
+            const unlockedIds = GameState.getUnlockedClues().filter(id => id !== 'truth');
+            
+            const unlockedCount = unlockedIds.length;
+            const totalCount = allClueIds.length;
+            
+            countEl.textContent = `${unlockedCount} / ${totalCount}`;
         }
     },
 
@@ -68,9 +90,6 @@ const UI = {
         
         const clue = ClueSystem.getClue(clueId);
         if (!clue) return;
-        
-        // Update sidebar
-        this.addClueToSidebar(clueId, clue.name);
         
         // Render content
         if (content) {
@@ -97,55 +116,7 @@ const UI = {
         GameState.viewClue(clueId);
     },
 
-    addClueToSidebar(clueId, clueName) {
-        const sidebar = document.getElementById('discovered-clues');
-        if (!sidebar) return;
-        
-        // Check if already added
-        if (document.getElementById(`clue-item-${clueId}`)) return;
-        
-        const item = document.createElement('div');
-        item.id = `clue-item-${clueId}`;
-        item.className = 'clue-item';
-        item.innerHTML = `
-            <a href="#" onclick="UI.showClueFromSidebar('${clueId}'); return false;">
-                ${clueName}
-            </a>
-        `;
-        
-        sidebar.appendChild(item);
-    },
-
-    async showClueFromSidebar(clueId) {
-        const clue = ClueSystem.getClue(clueId);
-        if (!clue) return;
-        
-        // Handle special clues
-        if (clueId === 'bentham') {
-            if (typeof Puzzles !== 'undefined') Puzzles.showBenthamScales();
-            return;
-        } else if (clueId === 'steinhoff') {
-            if (typeof Puzzles !== 'undefined') Puzzles.showSteinhoffMatching();
-            return;
-        } else if (clueId === 'historical-records') {
-            if (typeof Puzzles !== 'undefined') Puzzles.showHistoricalRecords();
-            return;
-        } else if (clueId === 'intervening-action') {
-            if (typeof Puzzles !== 'undefined') Puzzles.showInterveningAction();
-            return;
-        } else if (clueId === 'dirty-harry') {
-            if (typeof Puzzles !== 'undefined') Puzzles.showDirtyHarry();
-            return;
-        } else if (clueId === 'mdos-chart') {
-            if (typeof showMDOSChart !== 'undefined') showMDOSChart();
-            return;
-        }
-        
-        const content = await ClueSystem.loadClueContent(clueId);
-        this.showClue(clueId, content);
-    },
-
-    showCodeInput(clueId, callback) {
+    showCodeInput(clueId) {
         const viewer = document.getElementById('clue-viewer');
         if (!viewer) return;
         
@@ -164,7 +135,7 @@ const UI = {
             <div class="code-input-container">
                 <p>Enter the code to unlock this document:</p>
                 ${hintText}
-                <input type="text" id="code-input" placeholder="Enter code" maxlength="10">
+                <input type="text" id="code-input" placeholder="Enter code" autocomplete="off" maxlength="10">
                 <button onclick="UI.submitCode('${clueId}')">Submit</button>
                 <p id="code-error" class="error-message" style="display:none;"></p>
             </div>
@@ -263,6 +234,8 @@ const UI = {
     },
 
     showFormSelection(forms) {
+        const gameCompleted = GameState.isGameCompleted();
+        
         // Hide discovery grid and clue viewer
         const discoveryGrid = document.getElementById('discovery-grid');
         const clueViewer = document.getElementById('clue-viewer');
@@ -305,6 +278,10 @@ const UI = {
         // Build team slots HTML
         const teamSlotsHTML = team.members.map((member, index) => {
             const selection = formSelections[member] || { form: '', reason: '' };
+            const selectDisabledAttr = gameCompleted ? 'disabled' : '';
+            const textareaReadonlyAttr = gameCompleted ? 'readonly' : '';
+            const selectOnChange = gameCompleted ? '' : `onchange="UI.updateFormSelection('${member}', this.value)"`;
+            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateFormReason('${member}', this.value, ${index})"`;
             return `
                 <div class="team-slot" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin-bottom: 1rem;">
                     <h3 style="color: var(--text-amber); margin-top: 0;">${member}</h3>
@@ -312,7 +289,7 @@ const UI = {
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Form Selection:</label>
                         <select id="form-select-${index}" 
                                 style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace;"
-                                onchange="UI.updateFormSelection('${member}', this.value)">
+                                ${selectOnChange} ${selectDisabledAttr}>
                             <option value="">Select a form...</option>
                             <option value="form-a" ${selection.form === 'form-a' ? 'selected' : ''}>Form A: Enhanced Interrogation</option>
                             <option value="form-b" ${selection.form === 'form-b' ? 'selected' : ''}>Form B: Psychologist Discussion</option>
@@ -324,7 +301,7 @@ const UI = {
                                   rows="3" 
                                   style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"
                                   placeholder="Enter reason (at least 5 words)..."
-                                  onchange="UI.updateFormReason('${member}', this.value, ${index})">${selection.reason}</textarea>
+                                  ${textareaOnChange} ${textareaReadonlyAttr}>${selection.reason}</textarea>
                         <p id="form-reason-error-${index}" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
                     </div>
                 </div>
@@ -344,6 +321,15 @@ const UI = {
             </div>
         ` : '';
         
+        const buttonLabel = gameCompleted ? 'View Results' : 'Submit Form Selection';
+        const buttonOnClick = gameCompleted ? 'UI.viewFinalResults()' : 'UI.submitTeamFormSelection()';
+        const buttonDisabledAttr = gameCompleted ? '' : (acceptanceStatus.canSubmit ? '' : 'disabled');
+        const buttonBackground = gameCompleted
+            ? 'var(--accent-green)'
+            : (acceptanceStatus.canSubmit ? 'var(--accent-green)' : 'var(--bg-darker)');
+        const buttonCursor = gameCompleted ? 'pointer' : (acceptanceStatus.canSubmit ? 'pointer' : 'not-allowed');
+        const buttonOpacity = gameCompleted ? '1' : (acceptanceStatus.canSubmit ? '1' : '0.5');
+        
         formSelectionView.innerHTML = `
             <div class="form-selection-header">
                 <button class="back-button" onclick="UI.returnToMainGame()">← Back to Investigation</button>
@@ -362,11 +348,11 @@ const UI = {
                 ${teamSlotsHTML}
             </div>
             <div style="text-align: center; margin-top: 2rem;">
-                <button onclick="UI.submitTeamFormSelection()" 
+                <button onclick="${buttonOnClick}" 
                         id="submit-team-form-btn"
-                        ${acceptanceStatus.canSubmit ? '' : 'disabled'}
-                        style="padding: 1rem 2rem; background: ${acceptanceStatus.canSubmit ? 'var(--accent-green)' : 'var(--bg-darker)'}; border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: ${acceptanceStatus.canSubmit ? 'pointer' : 'not-allowed'}; text-transform: uppercase; opacity: ${acceptanceStatus.canSubmit ? '1' : '0.5'};">
-                    Submit Form Selection
+                        ${buttonDisabledAttr}
+                        style="padding: 1rem 2rem; background: ${buttonBackground}; border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: ${buttonCursor}; text-transform: uppercase; opacity: ${buttonOpacity};">
+                    ${buttonLabel}
                 </button>
             </div>
         `;
@@ -617,6 +603,7 @@ const UI = {
         const discoveryGrid = document.getElementById('discovery-grid');
         const clueViewer = document.getElementById('clue-viewer');
         const formSelectionView = document.getElementById('form-selection-view');
+        const submitBtn = document.getElementById('submit-form-btn');
         
         if (discoveryGrid) discoveryGrid.style.display = 'grid';
         if (clueViewer) clueViewer.style.display = 'block';
@@ -628,41 +615,49 @@ const UI = {
             note.style.display = '';
         });
         
-        // Show manual submit button if game not completed
-        if (!GameState.isGameCompleted()) {
-            const submitBtn = document.getElementById('submit-form-btn');
-            if (submitBtn) submitBtn.style.display = 'block';
+        // Show manual submit button with appropriate label
+        if (submitBtn) {
+            const gameCompleted = GameState.isGameCompleted();
+            submitBtn.style.display = 'block';
+            submitBtn.textContent = gameCompleted ? 'View Results' : 'Submit Authorization Form';
         }
     },
 
     async selectForm(formId) {
         GameState.setSelectedForm(formId);
+        
+        // Record finish time once, so the timer freezes at submission
+        if (!localStorage.getItem('gameFinishedTime')) {
+            localStorage.setItem('gameFinishedTime', Date.now().toString());
+        }
+        
         GameState.unlockClue('truth');
         
-        // Hide form selection view, show clue viewer
+        // Hide other views, show only the truth/outcome screen
         const formSelectionView = document.getElementById('form-selection-view');
         const clueViewer = document.getElementById('clue-viewer');
         const discoveryGrid = document.getElementById('discovery-grid');
+        const customFormView = document.getElementById('custom-form-view');
+        const submitBtn = document.getElementById('submit-form-btn');
         
         if (formSelectionView) formSelectionView.style.display = 'none';
+        if (customFormView) customFormView.style.display = 'none';
         if (clueViewer) clueViewer.style.display = 'block';
         if (discoveryGrid) discoveryGrid.style.display = 'none';
+        if (submitBtn) submitBtn.style.display = 'none';
         
         // Show truth
         const truthContent = await ClueSystem.loadClueContent('truth');
         
-        // Combine truth and outcome
+        // Show truth content; outcome (including any custom form) is handled separately
         if (clueViewer) {
             const clue = ClueSystem.getClue('truth');
-            let content = truthContent;
-            
-            // If custom form, include the custom form content
-            if (formId === 'form-c') {
-                const customContent = localStorage.getItem('customFormContent') || '';
-                content += '\n\n## Your Custom Authorization Form\n\n' + customContent;
-            }
+            const content = truthContent;
             
             clueViewer.innerHTML = `
+                <div class="form-selection-header">
+                    <button class="back-button" onclick="UI.returnToMainGame()">← Back to Investigation</button>
+                </div>
                 <div class="clue-header">
                     <h2>${clue.name}</h2>
                 </div>
@@ -710,13 +705,15 @@ const UI = {
             `;
         } else if (formId === 'form-c') {
             const customFormContent = localStorage.getItem('customFormContent') || '';
+            const rawContent = customFormContent || '(No content provided)';
+            const safeContent = this.escapeHtml(rawContent);
             outcomeHTML = `
                 <div class="outcome">
                     <h2>Outcome: Custom Authorization Form Selected</h2>
                     <p>You created a custom authorization form with the following content:</p>
-                    <div style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin: 1rem 0; white-space: pre-wrap; font-family: 'Courier New', monospace;">
-                        ${customFormContent || '(No content provided)'}
-                    </div>
+                    <pre class="custom-form-preview" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin: 1rem 0; font-family: 'Courier New', monospace; white-space: pre-wrap;">
+${safeContent}
+                    </pre>
                     <p style="margin-top: 1rem; color: var(--text-amber);">
                         <strong>The game facilitator will now review your custom authorization form and inform you of the outcome based on the specific permissions and rules you included.</strong>
                     </p>
@@ -885,12 +882,17 @@ const UI = {
         if (!customFormView) return;
         
         const team = GameState.getTeam();
+        const gameCompleted = GameState.isGameCompleted();
         const customFormData = JSON.parse(localStorage.getItem('customFormData') || '{}');
         const customFormContent = localStorage.getItem('customFormContent') || '';
         
         // Build team sign-off slots
         const signOffSlotsHTML = team.members.map((member, index) => {
             const signOff = customFormData.signOffs && customFormData.signOffs[member] || { support: '', reason: '' };
+            const selectDisabledAttr = gameCompleted ? 'disabled' : '';
+            const textareaReadonlyAttr = gameCompleted ? 'readonly' : '';
+            const selectOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${member}', this.value, document.getElementById('signoff-reason-${index}').value, ${index})"`;
+            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${member}', document.getElementById('signoff-support-${index}').value, this.value, ${index})"`;
             return `
                 <div class="team-slot" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin-bottom: 1rem;">
                     <h3 style="color: var(--text-amber); margin-top: 0;">${member}</h3>
@@ -898,7 +900,7 @@ const UI = {
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Support/Reject:</label>
                         <select id="signoff-support-${index}" 
                                 style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace;"
-                                onchange="UI.updateSignOff('${member}', this.value, document.getElementById('signoff-reason-${index}').value, ${index})">
+                                ${selectOnChange} ${selectDisabledAttr}>
                             <option value="">Select...</option>
                             <option value="support" ${signOff.support === 'support' ? 'selected' : ''}>Support</option>
                             <option value="reject" ${signOff.support === 'reject' ? 'selected' : ''}>Reject</option>
@@ -910,7 +912,7 @@ const UI = {
                                   rows="3" 
                                   style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"
                                   placeholder="Enter reason (at least 5 words)..."
-                                  onchange="UI.updateSignOff('${member}', document.getElementById('signoff-support-${index}').value, this.value, ${index})">${signOff.reason}</textarea>
+                                  ${textareaOnChange} ${textareaReadonlyAttr}>${signOff.reason}</textarea>
                         <p id="signoff-reason-error-${index}" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
                     </div>
                 </div>
@@ -919,6 +921,15 @@ const UI = {
         
         // Calculate acceptance status for custom form
         const acceptanceStatus = this.checkCustomFormAcceptance(customFormData.signOffs || {}, team);
+        
+        const customFormButtonLabel = gameCompleted ? 'View Results' : 'Submit Custom Form';
+        const customFormButtonOnClick = gameCompleted ? 'UI.viewFinalResults()' : 'UI.submitCustomForm()';
+        const customFormButtonDisabled = gameCompleted ? '' : (acceptanceStatus.canSubmit ? '' : 'disabled');
+        const customFormButtonBackground = gameCompleted
+            ? 'var(--accent-green)'
+            : (acceptanceStatus.canSubmit ? 'var(--accent-green)' : 'var(--bg-darker)');
+        const customFormButtonCursor = gameCompleted ? 'pointer' : (acceptanceStatus.canSubmit ? 'pointer' : 'not-allowed');
+        const customFormButtonOpacity = gameCompleted ? '1' : (acceptanceStatus.canSubmit ? '1' : '0.5');
         
         customFormView.innerHTML = `
             <div class="form-selection-header">
@@ -939,7 +950,7 @@ const UI = {
                           rows="15" 
                           style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"
                           placeholder="Enter your custom authorization form content here (at least 5 words)..."
-                          onchange="UI.updateCustomFormContent(this.value)">${customFormContent}</textarea>
+                          ${gameCompleted ? 'readonly' : 'onchange="UI.updateCustomFormContent(this.value)"'}>${customFormContent}</textarea>
                 <p id="custom-form-content-error" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
             </div>
             <div>
@@ -947,11 +958,11 @@ const UI = {
                 ${signOffSlotsHTML}
             </div>
             <div style="text-align: center; margin-top: 2rem;">
-                <button onclick="UI.submitCustomForm()" 
+                <button onclick="${customFormButtonOnClick}" 
                         id="submit-custom-form-btn"
-                        ${acceptanceStatus.canSubmit ? '' : 'disabled'}
-                        style="padding: 1rem 2rem; background: ${acceptanceStatus.canSubmit ? 'var(--accent-green)' : 'var(--bg-darker)'}; border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: ${acceptanceStatus.canSubmit ? 'pointer' : 'not-allowed'}; text-transform: uppercase; opacity: ${acceptanceStatus.canSubmit ? '1' : '0.5'};">
-                    Submit Custom Form
+                        ${customFormButtonDisabled}
+                        style="padding: 1rem 2rem; background: ${customFormButtonBackground}; border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: ${customFormButtonCursor}; text-transform: uppercase; opacity: ${customFormButtonOpacity};">
+                    ${customFormButtonLabel}
                 </button>
             </div>
         `;
