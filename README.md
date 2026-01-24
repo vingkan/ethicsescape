@@ -10,7 +10,9 @@ Web application and clues for ethics escape room about torture.
 
 TODO:
 - [ ] Audit game text
-- [ ] Improve puzzle form factor
+- [x] Improve puzzle form factor
+- [ ] Add debrief section
+- [ ] Improve content graders
 
 ## Physical Room Setup Instructions
 

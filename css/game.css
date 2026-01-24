@@ -13,6 +13,8 @@
     --border-color: #2a3a2a;
     --accent-green: #2d5a2d;
     --accent-red: #5a2d2d;
+    --accent-amber-dark: rgb(175, 95, 5);
+    --accent-green-light: #4caf50;
     --warning: #ffaa00;
     color-scheme: only dark;
 }
@@ -400,6 +402,100 @@ p {
     text-align: center;
 }
 
+/* Bentham scales: high-stakes threat assessment console */
+.bentham-puzzle {
+    background: var(--bg-darker);
+    border: 2px solid var(--border-color);
+    padding: 1.5rem 1.75rem;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+}
+
+.bentham-intro {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.bentham-scale-input {
+    margin-top: 1.25rem;
+}
+
+.bentham-scale-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+}
+
+.bentham-puzzle input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80.75%;
+    margin: 0.5rem 10%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--border-color), var(--text-amber));
+    outline: none;
+}
+
+.bentham-puzzle input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--bg-dark);
+    border: 2px solid var(--text-amber);
+    box-shadow: 0 0 8px rgba(255, 184, 77, 0.5);
+    cursor: pointer;
+}
+
+.bentham-puzzle input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--bg-dark);
+    border: 2px solid var(--text-amber);
+    box-shadow: 0 0 8px rgba(255, 184, 77, 0.5);
+    cursor: pointer;
+}
+
+.bentham-scale-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+}
+
+.bentham-scale-label {
+    flex: 1;
+    padding: 0.3rem 0.35rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    text-align: center;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.4);
+    transition: all 0.15s ease-out;
+}
+
+.bentham-scale-label-value {
+    font-weight: bold;
+    margin-bottom: 0.1rem;
+}
+
+.bentham-scale-label-text {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.bentham-scale-label.active {
+    border-color: var(--text-amber);
+    color: var(--text-primary);
+    box-shadow: 0 0 10px rgba(255, 184, 77, 0.4);
+}
+
 .matching-puzzle {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -420,6 +516,48 @@ p {
     border-color: var(--text-amber);
 }
 
+.match-item.definition {
+    cursor: default;
+}
+
+.match-item.example.dragging {
+    opacity: 0.75;
+    transform: translateY(-3px) rotate(-1deg);
+}
+
+.match-item.example.selected {
+    border-color: var(--text-amber);
+    box-shadow: 0 0 12px rgba(255, 184, 77, 0.5);
+}
+
+.definition-drop-zone {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    border: 1px dashed var(--border-color);
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    position: relative;
+}
+
+.definition-drop-zone::before {
+    content: attr(data-placeholder);
+    opacity: 0.7;
+}
+
+.definition-drop-zone.has-example::before {
+    content: '';
+}
+
+.definition-drop-zone.drag-over {
+    border-color: var(--text-amber);
+    box-shadow: 0 0 12px rgba(255, 184, 77, 0.4);
+}
+
 .match-item.matched {
     background: var(--accent-green);
     opacity: 0.7;
@@ -436,13 +574,52 @@ p {
     margin: 1rem 0;
 }
 
-.record-item select {
+.record-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.record-badge {
     background: var(--bg-panel);
     border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 0.5rem;
-    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
     font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+}
+
+.record-badge:hover {
+    border-color: var(--text-amber);
+    color: var(--text-primary);
+}
+
+.record-badge.selected {
+    box-shadow: 0 0 12px rgba(45, 90, 45, 0.8);
+}
+
+.record-badge.selected[data-value="RC"] {
+    background: var(--accent-green);
+    border-color: var(--accent-green-light);
+    color: var(--text-primary);
+}
+
+.record-badge.selected[data-value="IB"] {
+    background: var(--accent-amber-dark);
+    border-color: var(--text-amber);
+    color: var(--text-primary);
+}
+
+.record-badge.selected[data-value="DE"] {
+    background: var(--accent-red);
+    border-color: var(--text-red);
+    color: var(--text-primary);
 }
 
 /* Form Selection View */
@@ -728,6 +905,10 @@ p {
     #pager-postit {
         top: auto;
         right: auto;
+    }
+
+    .steinhoff-mobile-hint {
+        display: block;
     }
 }
 

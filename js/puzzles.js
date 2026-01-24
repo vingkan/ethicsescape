@@ -2,6 +2,70 @@
  * Interactive puzzle implementations
  */
 
+// Configuration for Bentham's threat assessment scales
+const BenthamScaleConfig = {
+    intensity: {
+        name: 'intensity',
+        title: 'Intensity Rating',
+        prompt: 'How intense do they think the consequences will be?',
+        min: 1,
+        max: 5,
+        defaultValue: 3,
+        levels: [
+            { value: 1, shortLabel: 'Very tolerable' },
+            { value: 2, shortLabel: 'Somewhat tolerable' },
+            { value: 3, shortLabel: 'Cannot be determined' },
+            { value: 4, shortLabel: 'Somewhat painful' },
+            { value: 5, shortLabel: 'Very painful'  }
+        ]
+    },
+    duration: {
+        name: 'duration',
+        title: 'Duration Rating',
+        prompt: 'How long do they think the consequences will last?',
+        min: 1,
+        max: 5,
+        defaultValue: 3,
+        levels: [
+            { value: 1, shortLabel: 'Very short time' },
+            { value: 2, shortLabel: 'Somewhat short time' },
+            { value: 3, shortLabel: 'Cannot be determined' },
+            { value: 4, shortLabel: 'Somewhat long time' },
+            { value: 5, shortLabel: 'Very long time' },
+        ]
+    },
+    certainty: {
+        name: 'certainty',
+        title: 'Certainty Rating',
+        prompt: 'How sure are they that the threat will occur?',
+        min: 1,
+        max: 5,
+        defaultValue: 3,
+        levels: [
+            { value: 1, shortLabel: 'Very unlikely' },
+            { value: 2, shortLabel: 'Somewhat unlikely' },
+            { value: 3, shortLabel: 'Cannot be determined' },
+            { value: 4, shortLabel: 'Somewhat likely' },
+            { value: 5, shortLabel: 'Very likely'  }
+        ]
+    },
+    nearness: {
+        name: 'nearness',
+        title: 'Nearness Rating',
+        prompt: 'How close do they think the threat is occurring?',
+        min: 1,
+        max: 5,
+        defaultValue: 3,
+        levels: [
+            { value: 1, shortLabel: 'Very far' },
+            { value: 2, shortLabel: 'Somewhat far' },
+            { value: 3, shortLabel: 'Cannot be determined' },
+            { value: 4, shortLabel: 'Somewhat close' },
+            { value: 5, shortLabel: 'Very close'  }
+        ]
+    }
+};
+
 const Puzzles = {
     async showBenthamScales() {
         // Always show the puzzle, but conditionally show advisor content
@@ -34,35 +98,19 @@ const Puzzles = {
         
         const html = `
             <div class="bentham-puzzle">
-                <p>Use the scales below to quantify the advisor's assessment of the bomb threat according to its perceived intensity, duration, certainty, and nearness.</p>
+                <p class="bentham-intro">
+                    Use the calibrated scales below to quantify the advisor's assessment of the bomb threat according to its
+                    perceived intensity, duration, certainty, and nearness.
+                </p>
                 
                 ${advisorContentHTML}
                 
                 <p style="margin-top: 1.5rem;"><strong>Rate the threat on each scale:</strong></p>
                 
-                <div class="scale-input">
-                    <label>Intensity (1-5): How severe would the consequences be?</label>
-                    <input type="range" id="intensity" min="1" max="5" value="3" oninput="Puzzles.updateBenthamValue('intensity', this.value)">
-                    <input type="number" id="intensity-value" min="1" max="5" value="3" onchange="Puzzles.updateBenthamSlider('intensity', this.value)">
-                </div>
-                
-                <div class="scale-input">
-                    <label>Duration (1-5): How long would the consequences last?</label>
-                    <input type="range" id="duration" min="1" max="5" value="3" oninput="Puzzles.updateBenthamValue('duration', this.value)">
-                    <input type="number" id="duration-value" min="1" max="5" value="3" onchange="Puzzles.updateBenthamSlider('duration', this.value)">
-                </div>
-                
-                <div class="scale-input">
-                    <label>Certainty (1-5): How certain is the threat?</label>
-                    <input type="range" id="certainty" min="1" max="5" value="3" oninput="Puzzles.updateBenthamValue('certainty', this.value)">
-                    <input type="number" id="certainty-value" min="1" max="5" value="3" onchange="Puzzles.updateBenthamSlider('certainty', this.value)">
-                </div>
-                
-                <div class="scale-input">
-                    <label>Nearness (1-5): How soon will the consequences occur?</label>
-                    <input type="range" id="nearness" min="1" max="5" value="3" oninput="Puzzles.updateBenthamValue('nearness', this.value)">
-                    <input type="number" id="nearness-value" min="1" max="5" value="3" onchange="Puzzles.updateBenthamSlider('nearness', this.value)">
-                </div>
+                ${this.renderBenthamScale('intensity')}
+                ${this.renderBenthamScale('duration')}
+                ${this.renderBenthamScale('certainty')}
+                ${this.renderBenthamScale('nearness')}
                 
                 <button onclick="Puzzles.submitBenthamScales()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
                     Submit Assessment
@@ -72,24 +120,103 @@ const Puzzles = {
         `;
         
         UI.showPuzzle('bentham', html);
+
+        // Initialize visual highlights for default slider positions
+        ['intensity', 'duration', 'certainty', 'nearness'].forEach(name => {
+            const config = BenthamScaleConfig[name];
+            if (config) {
+                this.updateBenthamScaleVisual(name, config.defaultValue);
+            }
+        });
     },
     
-    updateBenthamValue(name, value) {
-        const valueInput = document.getElementById(`${name}-value`);
-        if (valueInput) valueInput.value = value;
+    renderBenthamScale(name) {
+        const config = BenthamScaleConfig[name];
+        if (!config) return '';
+        
+        const sliderId = config.name;
+        const labelsId = `${config.name}-labels`;
+        
+        const labelsHTML = config.levels.map(level => `
+            <div class="bentham-scale-label" data-scale="${config.name}" data-value="${level.value}" title="${level.shortLabel}">
+                <div class="bentham-scale-label-value">${level.value}</div>
+                <div class="bentham-scale-label-text">${level.shortLabel}</div>
+            </div>
+        `).join('');
+        
+        return `
+            <div class="scale-input bentham-scale-input">
+                <label>${config.title}: ${config.prompt}</label>
+                <input
+                    type="range"
+                    id="${sliderId}"
+                    min="${config.min}"
+                    max="${config.max}"
+                    step="0.1"
+                    value="${config.defaultValue}"
+                    oninput="Puzzles.updateBenthamScaleVisual('${config.name}', this.value)"
+                    onchange="Puzzles.snapBenthamSlider('${config.name}')"
+                    onpointerup="Puzzles.snapBenthamSlider('${config.name}')"
+                >
+                <div class="bentham-scale-labels" id="${labelsId}">
+                    ${labelsHTML}
+                </div>
+            </div>
+        `;
     },
     
-    updateBenthamSlider(name, value) {
+    updateBenthamScaleVisual(name, value) {
+        const config = BenthamScaleConfig[name];
+        if (!config) return;
+        
+        const numericValue = parseFloat(value);
+        if (Number.isNaN(numericValue)) return;
+        
+        const clamped = Math.min(config.max, Math.max(config.min, Math.round(numericValue)));
+        const labelsContainer = document.getElementById(`${name}-labels`);
+        if (!labelsContainer) return;
+        
+        const labels = labelsContainer.querySelectorAll('.bentham-scale-label');
+        labels.forEach(label => {
+            const labelValue = parseInt(label.getAttribute('data-value'), 10);
+            if (labelValue === clamped) {
+                label.classList.add('active');
+            } else {
+                label.classList.remove('active');
+            }
+        });
+    },
+    
+    snapBenthamSlider(name) {
+        const config = BenthamScaleConfig[name];
+        if (!config) return;
+        
         const slider = document.getElementById(name);
-        if (slider) slider.value = value;
+        if (!slider) return;
+        
+        const numericValue = parseFloat(slider.value);
+        if (Number.isNaN(numericValue)) return;
+        
+        const clamped = Math.min(config.max, Math.max(config.min, Math.round(numericValue)));
+        slider.value = clamped;
+        this.updateBenthamScaleVisual(name, clamped);
     },
     
     async submitBenthamScales() {
+        const getRoundedValue = (name) => {
+            const config = BenthamScaleConfig[name];
+            const slider = document.getElementById(name);
+            if (!config || !slider) return null;
+            const numericValue = parseFloat(slider.value);
+            if (Number.isNaN(numericValue)) return null;
+            return Math.min(config.max, Math.max(config.min, Math.round(numericValue)));
+        };
+        
         const answers = {
-            intensity: parseInt(document.getElementById('intensity').value),
-            duration: parseInt(document.getElementById('duration').value),
-            certainty: parseInt(document.getElementById('certainty').value),
-            nearness: parseInt(document.getElementById('nearness').value)
+            intensity: getRoundedValue('intensity'),
+            duration: getRoundedValue('duration'),
+            certainty: getRoundedValue('certainty'),
+            nearness: getRoundedValue('nearness')
         };
         
         const errorEl = document.getElementById('bentham-error');
@@ -136,9 +263,13 @@ const Puzzles = {
         const examplesResponse = await fetch('original/steinhoff.md');
         const examplesText = await examplesResponse.text();
         
+        // Reset any previous matches
+        window.steinhoffMatches = {};
+        
         const html = `
             <div class="steinhoff-puzzle">
                 <p>Match each example to the correct concept. The numbers from correctly matched examples will form the key.</p>
+                <p class="steinhoff-mobile-hint">On touch devices, tap an example, then tap a definition's drop zone to assign it.</p>
                 
                 <div class="matching-puzzle">
                     <div>
@@ -149,7 +280,7 @@ const Puzzles = {
                     </div>
                     <div>
                         <h3>Examples</h3>
-                        <div id="examples-list">
+                        <div id="examples-list" ondragover="Puzzles.allowSteinhoffDrop(event)" ondrop="Puzzles.handleSteinhoffDropOnExamples(event)" ondragleave="Puzzles.handleSteinhoffDragLeave(event)">
                             ${this.renderExamples(examplesText)}
                         </div>
                     </div>
@@ -184,16 +315,18 @@ const Puzzles = {
         if (currentDef) definitions.push(currentDef);
         
         return definitions.map((def, idx) => `
-            <div class="match-item" data-def="${def.name}">
+            <div class="match-item definition" data-def="${def.name}">
                 <strong>${def.name}</strong>
                 <p>${def.description}</p>
-                <select id="def-${idx}" onchange="Puzzles.selectSteinhoffMatch('${def.name}', this.value)">
-                    <option value="">Select example...</option>
-                    <option value="0">Example 0</option>
-                    <option value="1">Example 1</option>
-                    <option value="3">Example 3</option>
-                    <option value="7">Example 7</option>
-                </select>
+                <div
+                    class="definition-drop-zone"
+                    data-def="${def.name}"
+                    data-placeholder="Drag an example here"
+                    ondragover="Puzzles.allowSteinhoffDrop(event)"
+                    ondrop="Puzzles.handleSteinhoffDropOnDefinition(event, '${def.name}')"
+                    ondragleave="Puzzles.handleSteinhoffDragLeave(event)"
+                    onclick="Puzzles.handleSteinhoffDropZoneClick('${def.name}')"
+                ></div>
             </div>
         `).join('');
     },
@@ -215,17 +348,173 @@ const Puzzles = {
         });
         
         return examples.map(ex => `
-            <div class="match-item" data-example="${ex.number}">
+            <div
+                class="match-item example"
+                data-example="${ex.number}"
+                draggable="true"
+                ondragstart="Puzzles.handleSteinhoffDragStart(event, '${ex.number}')"
+                ondragend="Puzzles.handleSteinhoffDragEnd(event)"
+                onclick="Puzzles.handleSteinhoffExampleClick('${ex.number}')"
+            >
                 <strong>Example ${ex.number}</strong>
                 <p>${ex.text}</p>
             </div>
         `).join('');
     },
     
-    selectSteinhoffMatch(defName, exampleNum) {
-        // Store selection
+    handleSteinhoffDragStart(event, exampleNum) {
+        if (!event || !event.dataTransfer) return;
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', exampleNum);
+        
+        const el = event.currentTarget || event.target;
+        if (el && el.classList) {
+            el.classList.add('dragging');
+        }
+    },
+    
+    handleSteinhoffDragEnd(event) {
+        const el = event.currentTarget || event.target;
+        if (el && el.classList) {
+            el.classList.remove('dragging');
+        }
+    },
+    
+    allowSteinhoffDrop(event) {
+        if (!event) return;
+        event.preventDefault();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+        }
+        
+        const dropZone = event.currentTarget;
+        if (dropZone && dropZone.classList && dropZone.classList.contains('definition-drop-zone')) {
+            dropZone.classList.add('drag-over');
+        }
+    },
+    
+    handleSteinhoffDragLeave(event) {
+        const dropZone = event.currentTarget;
+        if (dropZone && dropZone.classList) {
+            dropZone.classList.remove('drag-over');
+        }
+    },
+    
+    handleSteinhoffDropOnDefinition(event, defName) {
+        if (!event) return;
+        event.preventDefault();
+        
+        const exampleNum = event.dataTransfer ? event.dataTransfer.getData('text/plain') : null;
+        if (!exampleNum) return;
+        
+        const dropZone = event.currentTarget;
+        if (!dropZone || !dropZone.classList) return;
+        
+        dropZone.classList.remove('drag-over');
+        this.assignSteinhoffExampleToDefinition(exampleNum, defName, dropZone);
+    },
+    
+    handleSteinhoffDropOnExamples(event) {
+        if (!event) return;
+        event.preventDefault();
+        
         if (!window.steinhoffMatches) window.steinhoffMatches = {};
+        
+        const exampleNum = event.dataTransfer ? event.dataTransfer.getData('text/plain') : null;
+        if (!exampleNum) return;
+        
+        const examplesList = document.getElementById('examples-list');
+        if (!examplesList) return;
+        
+        const exampleEl = document.querySelector(`.match-item.example[data-example="${exampleNum}"]`);
+        if (!exampleEl) return;
+        
+        examplesList.appendChild(exampleEl);
+        
+        // Remove from any definition mapping
+        Object.keys(window.steinhoffMatches).forEach(def => {
+            if (window.steinhoffMatches[def] === exampleNum) {
+                delete window.steinhoffMatches[def];
+                const dropZone = document.querySelector(`.definition-drop-zone[data-def="${def}"]`);
+                if (dropZone && dropZone.classList) {
+                    dropZone.classList.remove('has-example');
+                }
+            }
+        });
+
+        // Clear selection highlight if this example was selected
+        if (window.steinhoffSelectedExample === exampleNum) {
+            window.steinhoffSelectedExample = null;
+        }
+        const selectedEl = document.querySelector('.match-item.example.selected');
+        if (selectedEl) {
+            selectedEl.classList.remove('selected');
+        }
+    },
+
+    handleSteinhoffExampleClick(exampleNum) {
+        const allExamples = document.querySelectorAll('.match-item.example');
+        allExamples.forEach(el => el.classList.remove('selected'));
+
+        if (window.steinhoffSelectedExample === exampleNum) {
+            window.steinhoffSelectedExample = null;
+            return;
+        }
+
+        window.steinhoffSelectedExample = exampleNum;
+        const exampleEl = document.querySelector(`.match-item.example[data-example="${exampleNum}"]`);
+        if (exampleEl) {
+            exampleEl.classList.add('selected');
+        }
+    },
+
+    handleSteinhoffDropZoneClick(defName) {
+        const exampleNum = window.steinhoffSelectedExample;
+        if (!exampleNum) return;
+        this.assignSteinhoffExampleToDefinition(exampleNum, defName);
+    },
+
+    assignSteinhoffExampleToDefinition(exampleNum, defName, dropZone) {
+        if (!window.steinhoffMatches) window.steinhoffMatches = {};
+
+        if (!dropZone) {
+            dropZone = document.querySelector(`.definition-drop-zone[data-def="${defName}"]`);
+        }
+        if (!dropZone) return;
+
+        const exampleEl = document.querySelector(`.match-item.example[data-example="${exampleNum}"]`);
+        if (!exampleEl) return;
+
+        // Clear previous definition that used this example
+        Object.keys(window.steinhoffMatches).forEach(def => {
+            if (window.steinhoffMatches[def] === exampleNum && def !== defName) {
+                delete window.steinhoffMatches[def];
+                const prevDrop = document.querySelector(`.definition-drop-zone[data-def="${def}"]`);
+                if (prevDrop && prevDrop.classList) {
+                    prevDrop.classList.remove('has-example');
+                }
+            }
+        });
+
+        // If target already has an example, return it to the examples list
+        const existingExample = dropZone.querySelector('.match-item.example');
+        if (existingExample) {
+            const examplesList = document.getElementById('examples-list');
+            if (examplesList) {
+                examplesList.appendChild(existingExample);
+            }
+        }
+
+        // Append example to this definition
+        dropZone.appendChild(exampleEl);
+        dropZone.classList.add('has-example');
+
         window.steinhoffMatches[defName] = exampleNum;
+
+        // Clear selection highlight
+        window.steinhoffSelectedExample = null;
+        const allExamples = document.querySelectorAll('.match-item.example');
+        allExamples.forEach(el => el.classList.remove('selected'));
     },
     
     async submitSteinhoffMatching() {
@@ -310,15 +599,20 @@ const Puzzles = {
         if (currentRecord) records.push(currentRecord);
         
         return records.map((record, idx) => `
-            <div class="record-item">
+            <div class="record-item" data-record-index="${idx}">
                 <p><strong>${record.header}</strong></p>
                 <p>${record.text}</p>
-                <select id="record-${idx}" onchange="Puzzles.selectRecordClassification(${idx}, this.value)">
-                    <option value="">Select classification...</option>
-                    <option value="RC">Ready Collaborator (RC)</option>
-                    <option value="IB">Innocent Bystander (IB)</option>
-                    <option value="DE">Dedicated Enemy (DE)</option>
-                </select>
+                <div class="record-badges">
+                    <button type="button" class="record-badge" data-value="RC" onclick="Puzzles.selectRecordClassification(${idx}, 'RC')">
+                        RC – Ready Collaborator
+                    </button>
+                    <button type="button" class="record-badge" data-value="IB" onclick="Puzzles.selectRecordClassification(${idx}, 'IB')">
+                        IB – Innocent Bystander
+                    </button>
+                    <button type="button" class="record-badge" data-value="DE" onclick="Puzzles.selectRecordClassification(${idx}, 'DE')">
+                        DE – Dedicated Enemy
+                    </button>
+                </div>
             </div>
         `).join('');
     },
@@ -326,6 +620,19 @@ const Puzzles = {
     selectRecordClassification(index, classification) {
         if (!window.historicalRecords) window.historicalRecords = [];
         window.historicalRecords[index] = classification;
+        
+        const recordEl = document.querySelector(`.record-item[data-record-index="${index}"]`);
+        if (recordEl) {
+            const badges = recordEl.querySelectorAll('.record-badge');
+            badges.forEach(badge => {
+                const value = badge.getAttribute('data-value');
+                if (value === classification) {
+                    badge.classList.add('selected');
+                } else {
+                    badge.classList.remove('selected');
+                }
+            });
+        }
     },
     
     async submitHistoricalRecords() {
