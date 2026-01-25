@@ -25,7 +25,7 @@ const discoveryLocations = [
         id: 'file-cabinet-shue',
         icon: '🗄️',
         label: 'File Cabinet Drawer',
-        clueId: 'shue',
+        clueId: 'shue-essay',
         type: 'code',
         description: 'Classified documents - requires code'
     },
@@ -41,10 +41,9 @@ const discoveryLocations = [
         id: 'bentham-worksheet',
         icon: '📊',
         label: 'Bentham\'s Scales Worksheet',
-        clueId: 'bentham',
-        type: 'puzzle',
-        description: 'Requires advisor assessment',
-        requires: null // Always visible, but puzzle requires advisor
+        clueId: 'bentham-scales',
+        type: 'puzzle', // Always accessible, not code-locked
+        description: 'Quantify the threat assessment'
     },
     {
         id: 'manila-folder-a',
@@ -66,28 +65,25 @@ const discoveryLocations = [
         id: 'steinhoff-folder',
         icon: '📂',
         label: 'Steinhoff Definitions',
-        clueId: 'steinhoff',
-        type: 'puzzle',
-        description: 'Unlocked after Bentham',
-        requires: 'bentham'
+        clueId: 'steinhoff-definitions',
+        type: 'code', // Changed to code type since it's code-locked
+        description: 'Requires code to unlock'
     },
     {
         id: 'records-file',
         icon: '📑',
         label: 'Historical Records',
         clueId: 'historical-records',
-        type: 'puzzle',
-        description: 'Unlocked after Steinhoff',
-        requires: 'steinhoff'
+        type: 'code', // Changed to code type since it's code-locked
+        description: 'Requires code to unlock'
     },
     {
         id: 'intervening-doc',
         icon: '📄',
         label: 'Intervening Action',
         clueId: 'intervening-action',
-        type: 'puzzle',
-        description: 'Unlocked after records',
-        requires: 'historical-records'
+        type: 'code', // Changed to code type since it's code-locked
+        description: 'Requires code to unlock'
     },
     {
         id: 'pamphlet-doc',
@@ -95,12 +91,67 @@ const discoveryLocations = [
         label: 'AFF Pamphlet',
         clueId: 'pamphlet',
         type: 'code',
-        description: 'Unlocked after intervening',
-        requires: 'intervening-action'
+        description: 'Requires code to unlock'
     }
 ];
 
 let timerInterval = null;
+
+function updatePostItVisibility() {
+    // Update secure-pager-code post-it visibility
+    const pagerPostit = document.getElementById('pager-postit');
+    if (pagerPostit) {
+        if (GameState.hasClueAccess('secure-pager-code')) {
+            pagerPostit.style.display = '';
+            // Set initial opacity to 0.75 if not viewed yet
+            const viewedClues = GameState.getViewedClues();
+            if (!viewedClues.includes('secure-pager-code')) {
+                pagerPostit.style.opacity = '0.75';
+                pagerPostit.style.cursor = 'pointer';
+                // Add click handler
+                pagerPostit.onclick = function() {
+                    GameState.unlockClue('secure-pager-code');
+                    GameState.viewClue('secure-pager-code');
+                    pagerPostit.style.opacity = '1.0';
+                    pagerPostit.style.cursor = 'default';
+                    UI.updateClueCount();
+                    pagerPostit.onclick = null; // Remove handler after first click
+                };
+            } else {
+                pagerPostit.style.opacity = '1.0';
+            }
+        } else {
+            pagerPostit.style.display = 'none';
+        }
+    }
+    
+    // Update shue-post-it visibility (in MDOS chart if it's shown)
+    const shuePostit = document.getElementById('shue-postit');
+    if (shuePostit) {
+        if (GameState.hasClueAccess('shue-post-it')) {
+            shuePostit.style.display = '';
+            // Set initial opacity to 0.75 if not viewed yet
+            const viewedClues = GameState.getViewedClues();
+            if (!viewedClues.includes('shue-post-it')) {
+                shuePostit.style.opacity = '0.75';
+                shuePostit.style.cursor = 'pointer';
+                // Add click handler
+                shuePostit.onclick = function() {
+                    GameState.unlockClue('shue-post-it');
+                    GameState.viewClue('shue-post-it');
+                    shuePostit.style.opacity = '1.0';
+                    shuePostit.style.cursor = 'default';
+                    UI.updateClueCount();
+                    shuePostit.onclick = null; // Remove handler after first click
+                };
+            } else {
+                shuePostit.style.opacity = '1.0';
+            }
+        } else {
+            shuePostit.style.display = 'none';
+        }
+    }
+}
 
 async function initGame() {
     // Check if game should be initialized or resumed
@@ -119,6 +170,9 @@ async function initGame() {
     
     // Load initial content
     await loadInitialContent();
+    
+    // Update post-it note visibility (before setupDiscoveryLocations to ensure it's set)
+    updatePostItVisibility();
     
     // Setup discovery locations
     setupDiscoveryLocations();
@@ -151,8 +205,8 @@ function setupDiscoveryLocations() {
     
     grid.innerHTML = '';
     
-    // Ensure Dirty Harry location persists after reload if the clue is already unlocked
-    if (GameState.isClueUnlocked('dirty-harry')) {
+    // Ensure Dirty Harry location is added if player has access (not just when unlocked)
+    if (GameState.hasClueAccess('dirty-harry')) {
         const hasDirtyHarry = discoveryLocations.some(location => location.clueId === 'dirty-harry');
         if (!hasDirtyHarry) {
             discoveryLocations.push({
@@ -160,39 +214,30 @@ function setupDiscoveryLocations() {
                 icon: '🎬',
                 label: 'Dirty Harry Scenario',
                 clueId: 'dirty-harry',
-                type: 'puzzle',
+                type: 'code', // Changed to code type since it's code-locked
                 description: 'Write a scenario based on your chosen form'
             });
         }
     }
     
     discoveryLocations.forEach(location => {
-        // Check if location should be visible (requirements met)
-        // Exception: bentham is always visible even if advisor not unlocked
-        const isBentham = location.clueId === 'bentham';
-        
-        // Skip location if it has unmet requirements (except bentham which is always shown)
-        if (!isBentham) {
-            if (location.requires && !GameState.isClueUnlocked(location.requires)) {
-                return; // Skip this location
-            }
+        // Check if current player has access to this clue
+        // Always show briefing and mdos-chart (available to all players)
+        const alwaysAvailable = location.clueId === 'briefing' || location.clueId === 'mdos-chart';
+        if (!alwaysAvailable && !GameState.hasClueAccess(location.clueId)) {
+            return; // Skip this location - player doesn't have access
         }
-        // Bentham is always included regardless of advisor status
-        // Steinhoff requires bentham to be unlocked (not just viewed)
+        
+        // All player-accessible clues are now visible, regardless of unlock status
+        // No requirement checks - clues are visible but code-locked
         
         const item = document.createElement('div');
         item.className = 'discovery-item';
         item.id = `discovery-${location.id}`;
         
-        // Check if already discovered
+        // Check if already discovered/unlocked
         if (GameState.isClueUnlocked(location.clueId)) {
             item.classList.add('discovered');
-        }
-        
-        // Special styling for bentham if advisor not unlocked
-        if (isBentham && !GameState.isClueUnlocked('advisor')) {
-            item.style.opacity = '0.8';
-            item.style.borderStyle = 'dashed';
         }
         
         item.innerHTML = `
@@ -207,66 +252,55 @@ function setupDiscoveryLocations() {
 }
 
 async function handleDiscoveryClick(location) {
-    // Check requirements (except for bentham which shows a message instead)
-    if (location.requires && !GameState.isClueUnlocked(location.requires) && location.clueId !== 'bentham') {
-        // Show message in clue viewer instead of alert
-        const viewer = document.getElementById('clue-viewer');
-        if (viewer) {
-            viewer.innerHTML = `
-                <div class="clue-header">
-                    <h2>Requirements Not Met</h2>
-                </div>
-                <div class="clue-content">
-                    <p>You need to unlock other clues first.</p>
-                </div>
-            `;
-        }
-        return;
-    }
-    
     // Animate
     UI.animateClueDiscovery(document.getElementById(`discovery-${location.id}`));
     
     const clue = ClueSystem.getClue(location.clueId);
     if (!clue) return;
     
-    // Check if can unlock (except for bentham which always shows)
-    if (!ClueSystem.canUnlock(location.clueId) && location.clueId !== 'bentham') {
-        // Show message in clue viewer instead of alert
-        const viewer = document.getElementById('clue-viewer');
-        if (viewer) {
-            viewer.innerHTML = `
-                <div class="clue-header">
-                    <h2>Requirements Not Met</h2>
-                </div>
-                <div class="clue-content">
-                    <p>You need to unlock other clues first.</p>
-                </div>
-            `;
-        }
-        return;
-    }
+    // Check if clue is already unlocked
+    const isUnlocked = GameState.isClueUnlocked(location.clueId);
     
     // Handle different types
     if (location.type === 'document') {
-        // Load and show document
-        const content = await ClueSystem.loadClueContent(location.clueId);
-        GameState.unlockClue(location.clueId);
-        UI.showClue(location.clueId, content);
-        UI.updateClueCount();
-        
-        // Mark as discovered
-        const item = document.getElementById(`discovery-${location.id}`);
-        if (item) item.classList.add('discovered');
-        
-    } else if (location.type === 'code') {
-        // Show code input or document
-        if (GameState.isClueUnlocked(location.clueId)) {
+        if (isUnlocked) {
             // Already unlocked, just show it
             const content = await ClueSystem.loadClueContent(location.clueId);
             UI.showClue(location.clueId, content);
         } else {
-            // For advisor, show special message about secure connection
+            // Documents are always unlocked when clicked (no code needed)
+            const content = await ClueSystem.loadClueContent(location.clueId);
+            GameState.unlockClue(location.clueId);
+            UI.showClue(location.clueId, content);
+            UI.updateClueCount();
+            setupDiscoveryLocations();
+        }
+        
+    } else if (location.type === 'code') {
+        // Show code input or document
+        if (isUnlocked) {
+            // Check if this is a puzzle-type clue (by ID)
+            const puzzleClues = ['steinhoff-definitions', 'bentham-scales', 'dirty-harry', 'historical-records', 'intervening-action'];
+            if (puzzleClues.includes(location.clueId)) {
+                // Show puzzle directly
+                if (location.clueId === 'bentham-scales') {
+                    Puzzles.showBenthamScales();
+                } else if (location.clueId === 'steinhoff-definitions') {
+                    Puzzles.showSteinhoffMatching();
+                } else if (location.clueId === 'historical-records') {
+                    Puzzles.showHistoricalRecords();
+                } else if (location.clueId === 'intervening-action') {
+                    Puzzles.showInterveningAction();
+                } else if (location.clueId === 'dirty-harry') {
+                    Puzzles.showDirtyHarry();
+                }
+            } else {
+                // Document-type clue: load and show content
+                const content = await ClueSystem.loadClueContent(location.clueId);
+                UI.showClue(location.clueId, content);
+            }
+        } else {
+            // Locked - show code input
             if (location.clueId === 'advisor') {
                 const viewer = document.getElementById('clue-viewer');
                 if (viewer) {
@@ -301,21 +335,26 @@ async function handleDiscoveryClick(location) {
         }
         
     } else if (location.type === 'puzzle') {
-        // Show puzzle
-        if (location.clueId === 'bentham') {
+        // Puzzle-type clues: bentham-scales is always accessible (not code-locked)
+        // Other puzzles: if unlocked, show puzzle; if locked, show code input
+        if (location.clueId === 'bentham-scales') {
+            // bentham-scales is always accessible, no code needed
             Puzzles.showBenthamScales();
-        } else if (location.clueId === 'steinhoff') {
-            Puzzles.showSteinhoffMatching();
-        } else if (location.clueId === 'historical-records') {
-            Puzzles.showHistoricalRecords();
-        } else if (location.clueId === 'intervening-action') {
-            Puzzles.showInterveningAction();
-        } else if (location.clueId === 'dirty-harry') {
-            Puzzles.showDirtyHarry();
+        } else if (isUnlocked) {
+            // Show puzzle for unlocked code-locked puzzles
+            if (location.clueId === 'steinhoff-definitions') {
+                Puzzles.showSteinhoffMatching();
+            } else if (location.clueId === 'historical-records') {
+                Puzzles.showHistoricalRecords();
+            } else if (location.clueId === 'intervening-action') {
+                Puzzles.showInterveningAction();
+            } else if (location.clueId === 'dirty-harry') {
+                Puzzles.showDirtyHarry();
+            }
+        } else {
+            // Locked - show code input for code-locked puzzles
+            UI.showCodeInput(location.clueId);
         }
-        
-        // Don't unlock or mark as discovered here - puzzles unlock when completed
-        // The checkmark will appear after the puzzle is completed and setupDiscoveryLocations is called
         
     } else if (location.type === 'special') {
         // Special handling
@@ -367,17 +406,36 @@ function showMDOSChart() {
             <p style="margin-top: 1rem; color: var(--text-secondary);">
                 These questions hint at the existence of clues that relate to each question.
             </p>
-            <div class="postit-note" id="shue-postit">
+            ${GameState.hasClueAccess('shue-post-it') ? `
+            <div class="postit-note" id="shue-postit" style="opacity: ${GameState.getViewedClues().includes('shue-post-it') ? '1.0' : '0.75'}; cursor: ${GameState.getViewedClues().includes('shue-post-it') ? 'default' : 'pointer'};">
                 <div class="postit-content">
                     <strong>Note:</strong> Check the file cabinet for a paper by Henry Shue. The document is from 1978.
                 </div>
             </div>
+            ` : ''}
         </div>
     `;
     
     UI.showPuzzle('mdos-chart', html);
     GameState.unlockClue('mdos-chart');
     UI.updateClueCount();
+    // Refresh discovery locations to show checkmark
+    setupDiscoveryLocations();
+    
+    // Set up click handler for shue-post-it if it exists and hasn't been viewed
+    setTimeout(() => {
+        const shuePostit = document.getElementById('shue-postit');
+        if (shuePostit && !GameState.getViewedClues().includes('shue-post-it')) {
+            shuePostit.onclick = function() {
+                GameState.unlockClue('shue-post-it');
+                GameState.viewClue('shue-post-it');
+                shuePostit.style.opacity = '1.0';
+                shuePostit.style.cursor = 'default';
+                UI.updateClueCount();
+                shuePostit.onclick = null; // Remove handler after first click
+            };
+        }
+    }, 100);
 }
 
 function startTimer() {
@@ -459,22 +517,25 @@ function showFormSelection() {
 }
 
 // Function to trigger Dirty Harry clue (can be called when consensus detected)
+// Note: Dirty Harry is now always visible to players who have access, so this function
+// is mainly for ensuring it's in the discovery locations array
 function triggerDirtyHarry() {
-    if (!GameState.isClueUnlocked('dirty-harry')) {
-        // Add Dirty Harry to discovery locations
-        const dirtyHarryLocation = {
-            id: 'dirty-harry-trigger',
-            icon: '🎬',
-            label: 'Dirty Harry Scenario',
-            clueId: 'dirty-harry',
-            type: 'puzzle',
-            description: 'Write a scenario based on your chosen form'
-        };
-        
-        discoveryLocations.push(dirtyHarryLocation);
-        setupDiscoveryLocations();
-        
-        // Notification is handled by modal in UI.js, no alert needed
+    if (GameState.hasClueAccess('dirty-harry')) {
+        // Add Dirty Harry to discovery locations if not already there
+        const hasDirtyHarry = discoveryLocations.some(location => location.clueId === 'dirty-harry');
+        if (!hasDirtyHarry) {
+            const dirtyHarryLocation = {
+                id: 'dirty-harry-trigger',
+                icon: '🎬',
+                label: 'Dirty Harry Scenario',
+                clueId: 'dirty-harry',
+                type: 'code', // Changed to code type since it's code-locked
+                description: 'Requires code to unlock'
+            };
+            
+            discoveryLocations.push(dirtyHarryLocation);
+            setupDiscoveryLocations();
+        }
     }
 }
 
@@ -485,6 +546,7 @@ window.UI = UI;
 window.showFormSelection = showFormSelection;
 window.triggerDirtyHarry = triggerDirtyHarry;
 window.setupDiscoveryLocations = setupDiscoveryLocations;
+window.updatePostItVisibility = updatePostItVisibility;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', initGame);

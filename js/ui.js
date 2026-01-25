@@ -73,12 +73,12 @@ const UI = {
     updateClueCount() {
         const countEl = document.getElementById('clue-count');
         if (countEl) {
-            // Exclude the endgame "truth" clue from progress totals
-            const allClueIds = Object.keys(ClueSystem.clues).filter(id => id !== 'truth');
-            const unlockedIds = GameState.getUnlockedClues().filter(id => id !== 'truth');
+            // Only count custom-form clue (available to all players)
+            const unlockedIds = GameState.getUnlockedClues();
+            const customFormUnlocked = unlockedIds.includes('custom-form');
             
-            const unlockedCount = unlockedIds.length;
-            const totalCount = allClueIds.length;
+            const unlockedCount = customFormUnlocked ? 1 : 0;
+            const totalCount = 1;
             
             countEl.textContent = `${unlockedCount} / ${totalCount}`;
         }
@@ -124,7 +124,7 @@ const UI = {
         
         // Add hint for Shue clue
         let hintText = '';
-        if (clueId === 'shue') {
+        if (clueId === 'shue-essay') {
             hintText = '<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;"><em>Hint: This document references a paper from a specific year. Historical documents may be encoded with publication dates.</em></p>';
         }
         
@@ -171,41 +171,53 @@ const UI = {
         if (ClueSystem.validateCode(clueId, code)) {
             // Correct code
             GameState.unlockClue(clueId);
-            const content = await ClueSystem.loadClueContent(clueId);
+            const clue = ClueSystem.getClue(clueId);
             
-            // Special handling for advisor
-            if (clueId === 'advisor') {
-                this.showClue(clueId, content);
-                // Show message about using this for Bentham scales
-                setTimeout(() => {
-                    const viewer = document.getElementById('clue-viewer');
-                    if (viewer) {
-                        viewer.innerHTML += `
-                            <div style="background: var(--bg-darker); border-left: 4px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
-                                <p style="color: var(--text-amber); margin: 0;">
-                                    <strong>Note:</strong> Use this advisor assessment to complete the Bentham's Scales worksheet. 
-                                    Quantify the threat according to intensity, duration, certainty, and nearness.
-                                </p>
-                            </div>
-                        `;
-                    }
-                }, 100);
+            // Handle puzzle-type clues - show puzzle directly instead of loading content
+            const puzzleClueIds = ['steinhoff-definitions', 'bentham-scales', 'dirty-harry', 'historical-records', 'intervening-action'];
+            if (puzzleClueIds.includes(clueId)) {
+                // Show puzzle directly for puzzle-type clues
+                if (clueId === 'steinhoff-definitions') {
+                    Puzzles.showSteinhoffMatching();
+                } else if (clueId === 'bentham-scales') {
+                    Puzzles.showBenthamScales();
+                } else if (clueId === 'historical-records') {
+                    Puzzles.showHistoricalRecords();
+                } else if (clueId === 'intervening-action') {
+                    Puzzles.showInterveningAction();
+                } else if (clueId === 'dirty-harry') {
+                    Puzzles.showDirtyHarry();
+                }
             } else {
-                this.showClue(clueId, content);
+                // Document-type clue: load and show content
+                const content = await ClueSystem.loadClueContent(clueId);
+                
+                // Special handling for advisor
+                if (clueId === 'advisor') {
+                    this.showClue(clueId, content);
+                    // Show message about using this for Bentham scales
+                    setTimeout(() => {
+                        const viewer = document.getElementById('clue-viewer');
+                        if (viewer) {
+                            viewer.innerHTML += `
+                                <div style="background: var(--bg-darker); border-left: 4px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
+                                    <p style="color: var(--text-amber); margin: 0;">
+                                        <strong>Note:</strong> Use this advisor assessment to complete the Bentham's Scales worksheet. 
+                                        Quantify the threat according to intensity, duration, certainty, and nearness.
+                                    </p>
+                                </div>
+                            `;
+                        }
+                    }, 100);
+                } else {
+                    this.showClue(clueId, content);
+                }
             }
             
             this.updateClueCount();
             
-            // Mark discovery location as discovered
-            const discoveryItems = document.querySelectorAll('.discovery-item');
-            discoveryItems.forEach(item => {
-                if (item.id.includes(clueId)) {
-                    item.classList.add('discovered');
-                }
-            });
-            
-            // If advisor was just unlocked, refresh discovery locations to show bentham properly
-            if (clueId === 'advisor' && typeof setupDiscoveryLocations === 'function') {
+            // Refresh discovery locations to show checkmark
+            if (typeof setupDiscoveryLocations === 'function') {
                 setupDiscoveryLocations();
             }
         } else {
@@ -330,6 +342,18 @@ const UI = {
         const buttonCursor = gameCompleted ? 'pointer' : (acceptanceStatus.canSubmit ? 'pointer' : 'not-allowed');
         const buttonOpacity = gameCompleted ? '1' : (acceptanceStatus.canSubmit ? '1' : '0.5');
         
+        // Eiree message - only show if custom-form is not unlocked
+        const eireeMessage = !customFormUnlocked ? `
+            <div style="text-align: center; margin: 2rem 0; padding: 1rem; background: var(--bg-darker); border: 2px dashed var(--text-amber); cursor: pointer; transition: all 0.3s ease;" 
+                 onclick="UI.showAuthorizationCodeModal()"
+                 onmouseover="this.style.borderColor='var(--text-red)'; this.style.background='var(--bg-dark)'"
+                 onmouseout="this.style.borderColor='var(--text-amber)'; this.style.background='var(--bg-darker)'">
+                <p style="color: var(--text-amber); font-size: 1.1rem; margin: 0; font-style: italic;">
+                    Are there really only two answers to this problem?
+                </p>
+            </div>
+        ` : '';
+        
         formSelectionView.innerHTML = `
             <div class="form-selection-header">
                 <button class="back-button" onclick="UI.returnToMainGame()">← Back to Investigation</button>
@@ -343,6 +367,7 @@ const UI = {
                     </p>
                 </div>
             </div>
+            ${eireeMessage}
             ${customFormButton}
             <div class="team-selection-container">
                 ${teamSlotsHTML}
@@ -559,11 +584,11 @@ const UI = {
                 'Thoroughness Warning',
                 thoroughness.message,
                 [
-                    {
-                        text: 'Continue Anyway',
-                        class: 'modal-button-primary',
-                        onclick: `UI.hideModal(); UI.showFormConfirmation('${formId}', '${formId === 'form-a' ? 'Form A' : 'Form B'}')`
-                    },
+                    // {
+                    //     text: 'Continue Anyway',
+                    //     class: 'modal-button-primary',
+                    //     onclick: `UI.hideModal(); UI.showFormConfirmation('${formId}', '${formId === 'form-a' ? 'Form A' : 'Form B'}')`
+                    // },
                     {
                         text: 'Go Back',
                         class: 'modal-button-secondary',
@@ -574,30 +599,126 @@ const UI = {
             return;
         }
         
-        // Check if dirty harry should be shown
-        if (!GameState.isClueUnlocked('dirty-harry')) {
-            // Show dirty harry clue
-            if (typeof triggerDirtyHarry === 'function') {
-                triggerDirtyHarry();
-            }
+        // Show code for dirty-harry when acceptance threshold is reached
+        // Dirty Harry is always visible to players who have access, but code-locked
+        // When threshold is reached, show the code to this player
+        if (!GameState.isClueUnlocked('dirty-harry') && GameState.hasClueAccess('dirty-harry')) {
+            // Player has access to dirty-harry but it's not unlocked yet
+            // Show code 1971 to this player
+            const code = '1971';
             this.showModal(
-                'New Clue Available',
-                'Your team has reached consensus. A new clue has appeared: Dirty Harry Scenario. Complete it before submitting your form.',
+                'Consensus Reached',
+                `Your team has reached consensus. Use code ${code} to unlock the Dirty Harry Scenario clue. Share this code with teammates who have access to that clue.`,
                 [
                     {
-                        text: 'View Clue',
+                        text: 'Continue',
                         class: 'modal-button-primary',
-                        onclick: `UI.hideModal(); UI.returnToMainGame(); setTimeout(() => { const item = document.getElementById('discovery-dirty-harry-trigger'); if (item) item.click(); }, 500);`
+                        onclick: 'UI.hideModal()'
                     }
                 ]
             );
-            return;
+        } else if (!GameState.isClueUnlocked('dirty-harry')) {
+            // Player doesn't have access to dirty-harry, but threshold reached
+            // Show code to share with teammate
+            const code = '1971';
+            this.showModal(
+                'Consensus Reached',
+                `Your team has reached consensus. A teammate needs code ${code} to unlock the Dirty Harry Scenario clue. Share this code with them.`,
+                [
+                    {
+                        text: 'Continue',
+                        class: 'modal-button-primary',
+                        onclick: 'UI.hideModal()'
+                    }
+                ]
+            );
         }
         
         // Proceed with form confirmation
         this.showFormConfirmation(formId, formId === 'form-a' ? 'Form A: Enhanced Interrogation' : 'Form B: Psychologist Discussion');
     },
 
+    showAuthorizationCodeModal() {
+        const modalContent = `
+            <p style="margin-bottom: 1rem;">Enter the authorization code to unlock the Custom Authorization Form.</p>
+            <input type="text" 
+                   id="auth-code-input" 
+                   placeholder="Enter code" 
+                   autocomplete="off"
+                   maxlength="10"
+                   style="width: 100%; padding: 0.75rem; margin: 1rem 0; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; letter-spacing: 0.2rem;">
+            <p id="auth-code-error" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
+        `;
+        
+        this.showModal(
+            'Enter Authorization Code',
+            modalContent,
+            [
+                {
+                    text: 'Submit',
+                    class: 'modal-button-primary',
+                    onclick: 'UI.submitAuthorizationCode()'
+                },
+                {
+                    text: 'Cancel',
+                    class: 'modal-button-secondary',
+                    onclick: 'UI.hideModal()'
+                }
+            ]
+        );
+        
+        // Focus input and add Enter key handler
+        setTimeout(() => {
+            const input = document.getElementById('auth-code-input');
+            if (input) {
+                input.focus();
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        UI.submitAuthorizationCode();
+                    }
+                });
+            }
+        }, 100);
+    },
+    
+    submitAuthorizationCode() {
+        const input = document.getElementById('auth-code-input');
+        const errorEl = document.getElementById('auth-code-error');
+        const code = input ? input.value.trim() : '';
+        
+        if (!code) {
+            if (errorEl) {
+                errorEl.textContent = 'Please enter a code.';
+                errorEl.style.display = 'block';
+            }
+            return;
+        }
+        
+        if (code === '0999') {
+            GameState.unlockClue('custom-form');
+            this.hideModal();
+            // Refresh form selection screen to show custom form button
+            const forms = JSON.parse(localStorage.getItem('formSelections') || '{}');
+            this.showFormSelection(forms);
+            this.updateClueCount();
+            
+            // Refresh discovery locations if needed
+            if (typeof setupDiscoveryLocations === 'function') {
+                setupDiscoveryLocations();
+            }
+        } else {
+            // Show error
+            if (errorEl) {
+                errorEl.textContent = 'Incorrect code. Try again.';
+                errorEl.style.display = 'block';
+            }
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+    },
+    
     returnToMainGame() {
         // Show discovery grid and clue viewer
         const discoveryGrid = document.getElementById('discovery-grid');
@@ -609,11 +730,10 @@ const UI = {
         if (clueViewer) clueViewer.style.display = 'block';
         if (formSelectionView) formSelectionView.style.display = 'none';
         
-        // Show post-it notes again
-        const postitNotes = document.querySelectorAll('.postit-note');
-        postitNotes.forEach(note => {
-            note.style.display = '';
-        });
+        // Update post-it note visibility and opacity
+        if (typeof updatePostItVisibility === 'function') {
+            updatePostItVisibility();
+        }
         
         // Show manual submit button with appropriate label
         if (submitBtn) {
@@ -837,11 +957,11 @@ ${safeContent}
                 'Thoroughness Warning',
                 thoroughness.message,
                 [
-                    {
-                        text: 'Continue Anyway',
-                        class: 'modal-button-primary',
-                        onclick: `UI.hideModal(); UI.showFormConfirmationFinal('${formId}', '${formName}')`
-                    },
+                    // {
+                    //     text: 'Continue Anyway',
+                    //     class: 'modal-button-primary',
+                    //     onclick: `UI.hideModal(); UI.showFormConfirmationFinal('${formId}', '${formName}')`
+                    // },
                     {
                         text: 'Go Back',
                         class: 'modal-button-secondary',

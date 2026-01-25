@@ -65,26 +65,32 @@ const GameState = {
         };
     },
     
+    getCurrentPlayerIndex() {
+        // Get current player index from localStorage, default to 0 if not set
+        const index = localStorage.getItem('currentPlayerIndex');
+        return index !== null ? parseInt(index) : 0;
+    },
+    
+    setCurrentPlayerIndex(index) {
+        localStorage.setItem('currentPlayerIndex', index.toString());
+    },
+    
     checkThoroughness() {
-        // Check if dirty harry is unlocked
-        if (!this.isClueUnlocked('dirty-harry')) {
+        // Check if custom-form is unlocked
+        if (this.isClueUnlocked('custom-form')) {
             return { shouldWarn: false };
         }
         
-        // Check if more than 15:00 minutes remaining
+        // Check if less than 15:00 minutes remaining
         const remaining = this.getRemainingTime();
         if (remaining <= 900) { // 15 minutes = 900 seconds
             return { shouldWarn: false };
         }
         
-        // Check if pamphlet clue is NOT unlocked
-        if (this.isClueUnlocked('pamphlet')) {
-            return { shouldWarn: false };
-        }
-        
+        // More than 15 minutes remaining and custom-form not unlocked
         return {
             shouldWarn: true,
-            message: 'The department expects thoroughness. You should search for more information before making this decision.'
+            message: 'The department expects thoroughness.\n\nRemember the tale of Dirty Harry.\n\nUse code 1971 to unlock the Dirty Harry clue (for the player who has access to it).'
         };
     },
 
@@ -136,6 +142,10 @@ const GameState = {
     getUnlockedClues() {
         return JSON.parse(localStorage.getItem('cluesUnlocked') || '[]');
     },
+    
+    getViewedClues() {
+        return JSON.parse(localStorage.getItem('cluesViewed') || '[]');
+    },
 
     setSelectedForm(formId) {
         localStorage.setItem('selectedForm', formId);
@@ -147,5 +157,75 @@ const GameState = {
 
     isGameCompleted() {
         return localStorage.getItem('gameCompleted') === 'true';
+    },
+    
+    getPlayerClues(playerIndex, teamSize) {
+        // Always available clues
+        const alwaysAvailable = ['briefing', 'mdos-chart', 'custom-form', 'truth'];
+        
+        // Player-specific clues based on distribution tables
+        let playerClues = [];
+        
+        // Ensure playerIndex and teamSize are numbers
+        playerIndex = Number(playerIndex);
+        teamSize = Number(teamSize);
+        
+        if (teamSize === 1) {
+            // One player gets all clues
+            playerClues = [
+                'form-a', 'form-b', 'shue-post-it', 'secure-pager-code',
+                'shue-essay', 'advisor', 'bentham-scales', 'steinhoff-definitions',
+                'historical-records', 'intervening-action', 'pamphlet', 'dirty-harry'
+            ];
+        } else if (teamSize === 2) {
+            if (playerIndex === 0) {
+                playerClues = ['form-a', 'shue-post-it', 'shue-essay', 'bentham-scales', 'historical-records', 'pamphlet'];
+            } else if (playerIndex === 1) {
+                playerClues = ['form-b', 'secure-pager-code', 'advisor', 'steinhoff-definitions', 'intervening-action', 'dirty-harry'];
+            }
+        } else if (teamSize === 3) {
+            if (playerIndex === 0) {
+                playerClues = ['form-a', 'secure-pager-code', 'bentham-scales', 'intervening-action'];
+            } else if (playerIndex === 1) {
+                playerClues = ['form-b', 'shue-essay', 'steinhoff-definitions', 'pamphlet'];
+            } else if (playerIndex === 2) {
+                playerClues = ['shue-post-it', 'advisor', 'historical-records', 'dirty-harry'];
+            }
+        } else if (teamSize === 4) {
+            if (playerIndex === 0) {
+                playerClues = ['form-a', 'shue-essay', 'historical-records'];
+            } else if (playerIndex === 1) {
+                playerClues = ['form-b', 'advisor', 'intervening-action'];
+            } else if (playerIndex === 2) {
+                playerClues = ['shue-post-it', 'bentham-scales', 'pamphlet'];
+            } else if (playerIndex === 3) {
+                playerClues = ['secure-pager-code', 'steinhoff-definitions', 'dirty-harry'];
+            }
+        } else {
+            // For teams larger than 4, default to single player (all clues)
+            playerClues = [
+                'form-a', 'form-b', 'shue-post-it', 'secure-pager-code',
+                'shue-essay', 'advisor', 'bentham-scales', 'steinhoff-definitions',
+                'historical-records', 'intervening-action', 'pamphlet', 'dirty-harry'
+            ];
+        }
+        
+        return [...alwaysAvailable, ...playerClues];
+    },
+    
+    hasClueAccess(clueId) {
+        const team = this.getTeam();
+        // If no team data, default to single player (all clues)
+        if (team.size === 0) {
+            return true;
+        }
+        const playerIndex = this.getCurrentPlayerIndex();
+        // Ensure player index is within valid range
+        if (playerIndex < 0 || playerIndex >= team.size) {
+            // If player index is out of range, return false (don't show clue)
+            return false;
+        }
+        const playerClues = this.getPlayerClues(playerIndex, team.size);
+        return playerClues.includes(clueId);
     }
 };

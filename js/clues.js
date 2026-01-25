@@ -37,12 +37,28 @@ const ClueSystem = {
             unlocked: true,
             requires: null
         },
-        'shue': {
-            id: 'shue',
+        'shue-post-it': {
+            id: 'shue-post-it',
+            name: 'Shue Post-It Note',
+            file: null, // Special: post-it note
+            encoded: false,
+            unlocked: true, // Always available, but visibility controlled by player access
+            requires: null
+        },
+        'secure-pager-code': {
+            id: 'secure-pager-code',
+            name: 'Secure Pager Code',
+            file: null, // Special: post-it note
+            encoded: false,
+            unlocked: true, // Always available, but visibility controlled by player access
+            requires: null
+        },
+        'shue-essay': {
+            id: 'shue-essay',
             name: 'Shue on Torture',
             file: 'original/shue.md',
             encoded: false,
-            key: '1978',
+            unlockCode: '1978',
             unlocked: false,
             requires: null,
             unlockMethod: 'code'
@@ -52,58 +68,64 @@ const ClueSystem = {
             name: 'Advisor Assessment',
             file: 'original/advisor.md',
             encoded: false, // Load directly from original since encoded file was created from wrong source
-            key: '9999', // Code to unlock, but content loads from original
+            unlockCode: '9999', // Code to unlock, but content loads from original
             unlocked: false,
             requires: null, // Always available - found first
             unlockMethod: 'code'
         },
-        'bentham': {
-            id: 'bentham',
+        'bentham-scales': {
+            id: 'bentham-scales',
             name: 'Bentham\'s Scales',
             file: null, // Special: interactive puzzle
             encoded: false,
             unlocked: false,
-            requires: 'advisor', // Requires advisor to be found first
-            unlockMethod: 'puzzle'
+            key: '5345', // Code generated from puzzle answers (intensity 5, duration 3, certainty 4, nearness 5) - displayed after completion
+            requires: null, // Always accessible to players who have access
+            unlockMethod: 'puzzle' // Not code-locked, always accessible
         },
-        'steinhoff': {
-            id: 'steinhoff',
+        'steinhoff-definitions': {
+            id: 'steinhoff-definitions',
             name: 'Steinhoff Definitions',
             file: null, // Special: interactive puzzle
             encoded: false,
             unlocked: false,
-            requires: 'bentham', // Requires bentham to be completed
-            unlockMethod: 'puzzle'
+            unlockCode: '5345', // Code needed to unlock (from bentham-scales completion)
+            key: '7031', // Code generated from matching (necessity 7, imminence 0, mildest-means 3, proportionality 1) - displayed after completion
+            requires: null, // Visible but code-locked
+            unlockMethod: 'code' // Code-locked, requires code 5345 to unlock
         },
         'historical-records': {
             id: 'historical-records',
             name: 'Historical Records',
             file: 'original/records.md',
             encoded: false,
-            key: '7031',
+            unlockCode: '7031', // Code needed to unlock (from steinhoff-definitions completion)
+            key: '212', // Code generated from classifications (2 RC, 1 IB, 2 DE) - displayed after completion
             unlocked: false,
-            requires: 'steinhoff',
-            unlockMethod: 'puzzle'
+            requires: null, // Visible but code-locked
+            unlockMethod: 'code'
         },
         'intervening-action': {
             id: 'intervening-action',
             name: 'Intervening Action Principle',
             file: 'original/intervening.md',
             encoded: false,
-            key: '212',
+            unlockCode: '212', // Code needed to unlock (from historical-records completion)
+            key: '87', // Code from selected statement number (statement 87 is the correct answer) - displayed after completion
             unlocked: false,
-            requires: 'historical-records',
-            unlockMethod: 'puzzle'
+            requires: null, // Visible but code-locked
+            unlockMethod: 'code'
         },
         'pamphlet': {
             id: 'pamphlet',
             name: 'AFF Pamphlet',
             file: 'original/pamphlet.md',
             encoded: false,
-            key: '87',
+            unlockCode: '87', // Code needed to unlock (from intervening-action completion)
+            key: '87', // Same as unlock code - displayed after completion
             unlocked: false,
-            requires: 'intervening-action',
-            unlockMethod: 'puzzle'
+            requires: null, // Visible but code-locked
+            unlockMethod: 'code'
         },
         'dirty-harry': {
             id: 'dirty-harry',
@@ -111,8 +133,10 @@ const ClueSystem = {
             file: null, // Special: interactive puzzle
             encoded: false,
             unlocked: false,
-            requires: null, // Unlocked when consensus detected
-            unlockMethod: 'manual'
+            unlockCode: '1971', // Code provided when acceptance threshold is reached
+            key: '0999', // Code provided when acceptance threshold is reached
+            requires: null, // Always visible to players who have access, but code-locked
+            unlockMethod: 'code' // Code-locked, but shows puzzle when unlocked
         },
         'custom-form': {
             id: 'custom-form',
@@ -120,8 +144,10 @@ const ClueSystem = {
             file: null, // Special: rendered as interactive form in puzzles.js
             encoded: false,
             unlocked: false,
-            requires: 'dirty-harry',
-            unlockMethod: 'puzzle'
+            unlockCode: '0999', // Code needed to unlock (from dirty-harry completion)
+            key: '0999', // Same as unlock code - displayed after dirty-harry validation
+            requires: null, // Visible but code-locked
+            unlockMethod: 'code' // Code-locked, requires code 0999 to unlock
         },
         'truth': {
             id: 'truth',
@@ -146,24 +172,22 @@ const ClueSystem = {
         // Check if already unlocked
         if (GameState.isClueUnlocked(clueId)) return true;
         
-        // Check requirements
-        if (clue.requires && !GameState.isClueUnlocked(clue.requires)) {
-            return false;
-        }
-        
-        return true;
+        // All clues are now visible but code-locked
+        // Requirements no longer block visibility, only codes unlock clues
+        // This function now just checks if the clue is already unlocked
+        return false; // If not unlocked, return false (clue is locked)
     },
 
     validateCode(clueId, code) {
         const clue = this.clues[clueId];
         if (!clue) return false;
         
-        // Check if clue has a key (some clues use codes to unlock even if not encoded)
-        if (!clue.key) return false;
+        // Check if clue has an unlockCode (code needed to unlock)
+        if (!clue.unlockCode) return false;
         
         // Normalize code (remove dashes, convert to array of digits)
         const normalizedCode = code.replace(/-/g, '').split('').map(d => parseInt(d));
-        const expectedKey = clue.key.split('').map(d => parseInt(d));
+        const expectedKey = clue.unlockCode.split('').map(d => parseInt(d));
         
         // Compare arrays
         if (normalizedCode.length !== expectedKey.length) return false;
@@ -178,6 +202,12 @@ const ClueSystem = {
     async loadClueContent(clueId) {
         const clue = this.clues[clueId];
         if (!clue) return null;
+        
+        // Puzzle-type clues should not load file content - they show interactive puzzles instead
+        const puzzleClueIds = ['steinhoff-definitions', 'bentham-scales', 'dirty-harry', 'historical-records', 'intervening-action'];
+        if (puzzleClueIds.includes(clueId)) {
+            return null;
+        }
         
         // Handle special clues that don't have files
         if (!clue.file) {

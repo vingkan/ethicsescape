@@ -119,7 +119,7 @@ const Puzzles = {
             </div>
         `;
         
-        UI.showPuzzle('bentham', html);
+        UI.showPuzzle('bentham-scales', html);
 
         // Initialize visual highlights for default slider positions
         ['intensity', 'duration', 'certainty', 'nearness'].forEach(name => {
@@ -222,26 +222,34 @@ const Puzzles = {
         const errorEl = document.getElementById('bentham-error');
         
         if (ClueSystem.validateBenthamScales(answers)) {
-            // Correct! Unlock Bentham; Steinhoff becomes available via its 'requires' on Bentham
-            GameState.unlockClue('bentham');
+            // Correct! Unlock Bentham and show code
+            GameState.unlockClue('bentham-scales');
             localStorage.setItem('benthamAnswers', JSON.stringify(answers));
             
-            // Show success message and unlock Steinhoff
+            // Show success message with code
+            const clue = ClueSystem.getClue('bentham-scales');
+            const code = clue.key; // Code is '5345'
             const viewer = document.getElementById('clue-viewer');
             if (viewer) {
                 viewer.innerHTML += `
                     <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
                         <p style="color: var(--text-primary); margin: 0;">
-                            <strong>Assessment Complete!</strong> Your quantification matches the advisor's analysis. 
-                            The Steinhoff definitions are now available.
+                            <strong>Assessment Complete!</strong> Your quantification matches the advisor's analysis.
                         </p>
+                        <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                            <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
+                                Share this code with teammates who need to unlock the Steinhoff Definitions clue.
+                            </p>
+                        </div>
                     </div>
                 `;
             }
             
             UI.updateClueCount();
             
-            // Refresh discovery locations to show Steinhoff
+            // Refresh discovery locations to show checkmark
             if (typeof setupDiscoveryLocations === 'function') {
                 setupDiscoveryLocations();
             }
@@ -293,7 +301,7 @@ const Puzzles = {
             </div>
         `;
         
-        UI.showPuzzle('steinhoff', html);
+        UI.showPuzzle('steinhoff-definitions', html);
     },
     
     renderDefinitions(text) {
@@ -522,25 +530,33 @@ const Puzzles = {
         const errorEl = document.getElementById('steinhoff-error');
         
         if (ClueSystem.validateSteinhoffMatching(matches)) {
-            // Correct! All four definitions are matched to the right examples
-            GameState.unlockClue('steinhoff');
+            // Correct! Unlock steinhoff-definitions and show code
+            GameState.unlockClue('steinhoff-definitions');
             localStorage.setItem('steinhoffMatches', JSON.stringify(matches));
             
-            // Show a brief success message in the current view
+            // Show success message with code
+            const clue = ClueSystem.getClue('steinhoff-definitions');
+            const code = clue.key; // Code is '7031'
             const viewer = document.getElementById('clue-viewer');
             if (viewer) {
                 viewer.innerHTML += `
                     <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
                         <p style="color: var(--text-primary); margin: 0;">
                             <strong>Matching Complete!</strong> You have correctly matched Steinhoff's definitions to their examples.
-                            The Historical Records puzzle is now available in the discovery grid.
                         </p>
+                        <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                            <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
+                                Share this code with teammates who need to unlock the Historical Records clue.
+                            </p>
+                        </div>
                     </div>
                 `;
             }
             UI.updateClueCount();
             
-            // Refresh discovery locations to show historical records
+            // Refresh discovery locations to show checkmark
             if (typeof setupDiscoveryLocations === 'function') {
                 setupDiscoveryLocations();
             }
@@ -650,19 +666,35 @@ const Puzzles = {
         
         // Then validate the classifications are correct
         if (ClueSystem.validateHistoricalRecords(classifications)) {
-            const code = ClueSystem.getHistoricalRecordsCode(classifications);
-            
-            // Only unlock Historical Records when its own puzzle is solved;
-            // Intervening Action becomes available via its 'requires' on historical-records
+            // Unlock historical-records and show code
             GameState.unlockClue('historical-records');
             localStorage.setItem('historicalRecords', JSON.stringify(classifications));
             
-            // Show historical records content
-            const content = await ClueSystem.loadClueContent('historical-records');
-            UI.showClue('historical-records', content);
+            // Show success message with code
+            const clue = ClueSystem.getClue('historical-records');
+            const code = clue.key; // Code is '212'
+            const viewer = document.getElementById('clue-viewer');
+            if (viewer) {
+                const content = await ClueSystem.loadClueContent('historical-records');
+                UI.showClue('historical-records', content);
+                viewer.innerHTML += `
+                    <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
+                        <p style="color: var(--text-primary); margin: 0;">
+                            <strong>Classification Complete!</strong> You have correctly classified all historical records according to Shue's definitions.
+                        </p>
+                        <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                            <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
+                                Share this code with teammates who need to unlock the Intervening Action clue.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
             UI.updateClueCount();
             
-            // Refresh discovery locations so Intervening Action appears
+            // Refresh discovery locations to show checkmark
             if (typeof setupDiscoveryLocations === 'function') {
                 setupDiscoveryLocations();
             }
@@ -755,19 +787,33 @@ const Puzzles = {
         }
         
         if (ClueSystem.validateInterveningAction(selected)) {
+            // Unlock intervening-action and show code
             GameState.unlockClue('intervening-action');
-            // We also have to unlock the pamphlet here so that it can be accessed.
-            GameState.unlockClue('pamphlet');
             localStorage.setItem('interveningAction', JSON.stringify(selected));
             
-            // Show pamphlet (unlock with code from selected statements)
-            // The pamphlet key is "87", so if statement 87 is selected, use that
-            // Otherwise, try to decode with the selected statement numbers
-            const pamphletContent = await ClueSystem.loadClueContent('pamphlet');
-            UI.showClue('pamphlet', pamphletContent);
+            // Show success message with code
+            const clue = ClueSystem.getClue('intervening-action');
+            const code = clue.key; // Code is '87'
+            const viewer = document.getElementById('clue-viewer');
+            if (viewer) {
+                viewer.innerHTML += `
+                    <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
+                        <p style="color: var(--text-primary); margin: 0;">
+                            <strong>Analysis Complete!</strong> You have correctly identified which statements are supported by the principle of intervening action.
+                        </p>
+                        <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                            <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
+                                Share this code with teammates who need to unlock the AFF Pamphlet clue.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
             UI.updateClueCount();
             
-            // Refresh discovery locations to show pamphlet
+            // Refresh discovery locations to show checkmark
             if (typeof setupDiscoveryLocations === 'function') {
                 setupDiscoveryLocations();
             }
@@ -817,33 +863,34 @@ const Puzzles = {
         }
         
         if (ClueSystem.validateDirtyHarryStory(story)) {
-            // Correct!
+            // Correct! Unlock dirty-harry and show code for custom-form
             GameState.unlockClue('dirty-harry');
-            // We also have to unlock the custom form here so that it can be accessed.
-            GameState.unlockClue('custom-form');
             localStorage.setItem('dirtyHarryStory', story);
             
-            // Show success message - form builder is on the form selection screen
-            const html = `
-                <div class="custom-form-container">
-                    <h2>Custom Authorization Form Unlocked</h2>
-                    <p style="color: var(--text-amber); font-size: 1.1rem; margin: 1rem 0;">
-                        ✓ Your Dirty Harry scenario has been accepted.
-                    </p>
-                    <p style="color: var(--text-secondary); margin: 1rem 0;">
-                        The Custom Authorization Form option is now available. When you're ready to submit an authorization form, 
-                        you can create your own custom form with any permissions and rules you want.
-                    </p>
-                    <p style="color: var(--text-secondary); margin-top: 1rem;">
-                        Go to the form selection screen to access the custom form builder.
-                    </p>
-                </div>
-            `;
+            // Show success message with code
+            const clue = ClueSystem.getClue('custom-form');
+            const code = clue.key; // Code is '0999'
+            const viewer = document.getElementById('clue-viewer');
+            if (viewer) {
+                viewer.innerHTML += `
+                    <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
+                        <p style="color: var(--text-primary); margin: 0;">
+                            <strong>✓ Your Dirty Harry scenario has been accepted.</strong>
+                        </p>
+                        <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                            <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
+                                Share this code with teammates who need to unlock the Custom Authorization Form clue.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
             
-            UI.showPuzzle('custom-form', html);
             UI.updateClueCount();
             
-            // Refresh discovery locations so Dirty Harry shows as completed
+            // Refresh discovery locations to show checkmark
             if (typeof setupDiscoveryLocations === 'function') {
                 setupDiscoveryLocations();
             }

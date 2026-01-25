@@ -217,6 +217,10 @@
                        autocomplete="off"
                        style="flex: 1; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace;"
                        onchange="saveTeamData()">
+                <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); font-family: 'Courier New', monospace; white-space: nowrap; cursor: pointer;">
+                    <input type="radio" name="current-player" value="${teamSlotCount}" id="player-radio-${teamSlotCount}" onchange="saveTeamData()" style="cursor: pointer;">
+                    This is me
+                </label>
                 <button onclick="removeTeamSlot('${slotId}')" style="padding: 0.5rem 1rem; background: var(--accent-red); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">Remove</button>
             `;
             slots.appendChild(slot);
@@ -250,6 +254,14 @@
                 localStorage.removeItem('teamMembers');
                 localStorage.removeItem('teamSize');
             }
+            
+            // Save current player index
+            const selectedPlayer = document.querySelector('input[name="current-player"]:checked');
+            if (selectedPlayer) {
+                localStorage.setItem('currentPlayerIndex', selectedPlayer.value);
+            } else {
+                localStorage.removeItem('currentPlayerIndex');
+            }
         }
 
         function loadTeamData() {
@@ -263,6 +275,13 @@
                     const input = document.getElementById(`player-${index}`);
                     if (input) input.value = name;
                 });
+                
+                // Restore selected player
+                const currentPlayerIndex = localStorage.getItem('currentPlayerIndex');
+                if (currentPlayerIndex !== null) {
+                    const radio = document.getElementById(`player-radio-${currentPlayerIndex}`);
+                    if (radio) radio.checked = true;
+                }
             } else {
                 // Start with one empty slot
                 addTeamSlot();
@@ -273,6 +292,14 @@
             const teamMembers = JSON.parse(localStorage.getItem('teamMembers') || '[]');
             if (teamMembers.length === 0) {
                 document.getElementById('team-error').textContent = 'Please enter at least one team member name.';
+                document.getElementById('team-error').style.display = 'block';
+                return;
+            }
+            
+            // Check if a player is selected
+            const selectedPlayer = document.querySelector('input[name="current-player"]:checked');
+            if (!selectedPlayer) {
+                document.getElementById('team-error').textContent = 'Please select which player you are by clicking "This is me" next to your name.';
                 document.getElementById('team-error').style.display = 'block';
                 return;
             }
