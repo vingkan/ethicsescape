@@ -266,6 +266,22 @@ const UI = {
         
         if (!formSelectionView) return;
         
+        // Check if current player is first player (index 0)
+        const currentPlayerIndex = GameState.getCurrentPlayerIndex();
+        if (currentPlayerIndex !== 0) {
+            formSelectionView.innerHTML = `
+                <div class="form-selection-header">
+                    <button class="back-button" onclick="UI.returnToMainGame()">← Back to Investigation</button>
+                    <h2>Access Restricted</h2>
+                    <p style="color: var(--text-red); margin-top: 1rem;">
+                        Only the team captain (Heart) can submit the authorization form.
+                    </p>
+                </div>
+            `;
+            formSelectionView.style.display = 'block';
+            return;
+        }
+        
         // Get team data
         const team = GameState.getTeam();
         if (team.size === 0) {
@@ -281,22 +297,29 @@ const UI = {
             return;
         }
         
+        // Code name constants
+        const CODE_NAME_ICONS = ['♥', '♠', '♦', '♣'];
+        
         // Load existing form selections
         const formSelections = JSON.parse(localStorage.getItem('formSelections') || '{}');
         
         // Check if custom form is unlocked
         const customFormUnlocked = GameState.isClueUnlocked('custom-form');
         
-        // Build team slots HTML
-        const teamSlotsHTML = team.members.map((member, index) => {
-            const selection = formSelections[member] || { form: '', reason: '' };
+        // Build team slots HTML using code names in order
+        const teamSlotsHTML = team.members.map((codeName, index) => {
+            const icon = CODE_NAME_ICONS[index];
+            const selection = formSelections[codeName] || { form: '', reason: '' };
             const selectDisabledAttr = gameCompleted ? 'disabled' : '';
             const textareaReadonlyAttr = gameCompleted ? 'readonly' : '';
-            const selectOnChange = gameCompleted ? '' : `onchange="UI.updateFormSelection('${member}', this.value)"`;
-            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateFormReason('${member}', this.value, ${index})"`;
+            const selectOnChange = gameCompleted ? '' : `onchange="UI.updateFormSelection('${codeName}', this.value)"`;
+            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateFormReason('${codeName}', this.value, ${index})"`;
             return `
                 <div class="team-slot" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin-bottom: 1rem;">
-                    <h3 style="color: var(--text-amber); margin-top: 0;">${member}</h3>
+                    <h3 style="color: var(--text-amber); margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">${icon}</span>
+                        <span>${codeName}</span>
+                    </h3>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Form Selection:</label>
                         <select id="form-select-${index}" 
@@ -308,7 +331,7 @@ const UI = {
                         </select>
                     </div>
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${member} supports this option:</label>
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${codeName} supports this option:</label>
                         <textarea id="form-reason-${index}" 
                                   rows="3" 
                                   style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"
@@ -1006,16 +1029,23 @@ ${safeContent}
         const customFormData = JSON.parse(localStorage.getItem('customFormData') || '{}');
         const customFormContent = localStorage.getItem('customFormContent') || '';
         
-        // Build team sign-off slots
-        const signOffSlotsHTML = team.members.map((member, index) => {
-            const signOff = customFormData.signOffs && customFormData.signOffs[member] || { support: '', reason: '' };
+        // Code name constants
+        const CODE_NAME_ICONS = ['♥', '♠', '♦', '♣'];
+        
+        // Build team sign-off slots using code names in order
+        const signOffSlotsHTML = team.members.map((codeName, index) => {
+            const icon = CODE_NAME_ICONS[index];
+            const signOff = customFormData.signOffs && customFormData.signOffs[codeName] || { support: '', reason: '' };
             const selectDisabledAttr = gameCompleted ? 'disabled' : '';
             const textareaReadonlyAttr = gameCompleted ? 'readonly' : '';
-            const selectOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${member}', this.value, document.getElementById('signoff-reason-${index}').value, ${index})"`;
-            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${member}', document.getElementById('signoff-support-${index}').value, this.value, ${index})"`;
+            const selectOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${codeName}', this.value, document.getElementById('signoff-reason-${index}').value, ${index})"`;
+            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${codeName}', document.getElementById('signoff-support-${index}').value, this.value, ${index})"`;
             return `
                 <div class="team-slot" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin-bottom: 1rem;">
-                    <h3 style="color: var(--text-amber); margin-top: 0;">${member}</h3>
+                    <h3 style="color: var(--text-amber); margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">${icon}</span>
+                        <span>${codeName}</span>
+                    </h3>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Support/Reject:</label>
                         <select id="signoff-support-${index}" 
@@ -1027,7 +1057,7 @@ ${safeContent}
                         </select>
                     </div>
                     <div>
-                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${member} supports/rejects:</label>
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${codeName} supports/rejects:</label>
                         <textarea id="signoff-reason-${index}" 
                                   rows="3" 
                                   style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"

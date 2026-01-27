@@ -2,6 +2,10 @@
  * Core game logic: timer, state management, game lifecycle
  */
 
+// Code name constants
+const CODE_NAMES = ['Heart', 'Spade', 'Diamond', 'Club'];
+const CODE_NAME_ICONS = ['♥', '♠', '♦', '♣'];
+
 const GameState = {
     init() {
         // Check if game is in progress

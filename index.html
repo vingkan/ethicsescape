@@ -172,13 +172,31 @@
 
             <div class="intro-content" id="team-selection-section">
                 <h2>Team Selection</h2>
-                <p>Enter your team members (1-6 players). Each player will independently enter their team on their
-                    device.
-                </p>
-                <div id="team-slots"></div>
-                <button onclick="addTeamSlot()"
-                    style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">+
-                    Add Player</button>
+                <p>Select the number of players on your team, then choose your code name. Each player on your team must
+                    choose a different code name.</p>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="team-size-select"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Number of
+                        Players:</label>
+                    <select id="team-size-select"
+                        style="width: 100%; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1rem;">
+                        <option value="">Select team size...</option>
+                        <option value="1">1 Player</option>
+                        <option value="2">2 Players</option>
+                        <option value="3">3 Players</option>
+                        <option value="4">4 Players</option>
+                    </select>
+                </div>
+
+                <div id="code-name-selection" style="display: none;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Choose Your Code
+                        Name:</label>
+                    <div id="code-name-tiles"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    </div>
+                </div>
+
                 <p id="team-error" style="color: var(--text-red); display: none; margin-top: 1rem;"></p>
             </div>
 
@@ -193,116 +211,162 @@
 
     <script src="js/game.js"></script>
     <script>
-        let teamSlotCount = 0;
+        // CODE_NAMES and CODE_NAME_ICONS are already defined in game.js
+        // Make function globally accessible
+        window.updateCodeNameOptions = function updateCodeNameOptions() {
+            const teamSizeSelect = document.getElementById('team-size-select');
+            const codeNameSelection = document.getElementById('code-name-selection');
+            const codeNameTiles = document.getElementById('code-name-tiles');
+            const teamSize = parseInt(teamSizeSelect.value);
 
-        function addTeamSlot() {
-            if (teamSlotCount >= 6) {
-                document.getElementById('team-error').textContent = 'Maximum 6 players allowed.';
-                document.getElementById('team-error').style.display = 'block';
+            if (!teamSize || teamSize < 1 || teamSize > 4) {
+                codeNameSelection.style.display = 'none';
+                saveTeamData();
                 return;
             }
 
-            const slots = document.getElementById('team-slots');
-            const slotId = `team-slot-${teamSlotCount}`;
-            const slot = document.createElement('div');
-            slot.id = slotId;
-            slot.style.marginBottom = '1rem';
-            slot.style.display = 'flex';
-            slot.style.alignItems = 'center';
-            slot.style.gap = '1rem';
-            slot.innerHTML = `
-                <input type="text" 
-                       id="player-${teamSlotCount}" 
-                       placeholder="Player ${teamSlotCount + 1} name" 
-                       autocomplete="off"
-                       style="flex: 1; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace;"
-                       onchange="saveTeamData()">
-                <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); font-family: 'Courier New', monospace; white-space: nowrap; cursor: pointer;">
-                    <input type="radio" name="current-player" value="${teamSlotCount}" id="player-radio-${teamSlotCount}" onchange="saveTeamData()" style="cursor: pointer;">
-                    This is me
-                </label>
-                <button onclick="removeTeamSlot('${slotId}')" style="padding: 0.5rem 1rem; background: var(--accent-red); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">Remove</button>
-            `;
-            slots.appendChild(slot);
-            teamSlotCount++;
-            saveTeamData();
-        }
+            // Show code name selection
+            codeNameSelection.style.display = 'block';
 
-        function removeTeamSlot(slotId) {
-            const slot = document.getElementById(slotId);
-            if (slot) {
-                slot.remove();
-                teamSlotCount--;
-                saveTeamData();
+            // Clear existing tiles
+            codeNameTiles.innerHTML = '';
+
+            // Create radio tiles for available code names
+            for (let i = 0; i < teamSize; i++) {
+                const codeName = CODE_NAMES[i];
+                const icon = CODE_NAME_ICONS[i];
+
+                const tile = document.createElement('label');
+                tile.style.cssText = 'display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg-darker); border: 2px solid var(--border-color); cursor: pointer; transition: all 0.3s; font-family: "Courier New", monospace;';
+                tile.onmouseover = function () {
+                    if (!tile.querySelector('input').checked) {
+                        this.style.borderColor = 'var(--text-amber)';
+                        this.style.background = 'var(--bg-panel)';
+                    }
+                };
+                tile.onmouseout = function () {
+                    if (!tile.querySelector('input').checked) {
+                        this.style.borderColor = 'var(--border-color)';
+                        this.style.background = 'var(--bg-darker)';
+                    }
+                };
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'code-name';
+                radio.value = i.toString();
+                radio.id = `code-name-${i}`;
+                radio.style.cursor = 'pointer';
+                radio.onchange = function () {
+                    // Update tile styles
+                    document.querySelectorAll('#code-name-tiles label').forEach(t => {
+                        if (t.querySelector('input').checked) {
+                            t.style.borderColor = 'var(--text-amber)';
+                            t.style.background = 'var(--bg-panel)';
+                        } else {
+                            t.style.borderColor = 'var(--border-color)';
+                            t.style.background = 'var(--bg-darker)';
+                        }
+                    });
+                    saveTeamData();
+                };
+
+                const iconSpan = document.createElement('span');
+                iconSpan.textContent = icon;
+                iconSpan.style.fontSize = '1.5rem';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = codeName;
+                nameSpan.style.color = 'var(--text-primary)';
+
+                tile.appendChild(radio);
+                tile.appendChild(iconSpan);
+                tile.appendChild(nameSpan);
+                codeNameTiles.appendChild(tile);
+            }
+
+            // Restore saved code name selection if it exists (without calling loadTeamData to avoid recursion)
+            const currentPlayerIndex = localStorage.getItem('currentPlayerIndex');
+            if (currentPlayerIndex !== null && parseInt(currentPlayerIndex) < teamSize) {
+                const radio = document.getElementById(`code-name-${currentPlayerIndex}`);
+                if (radio) {
+                    radio.checked = true;
+                    // Trigger style update
+                    radio.dispatchEvent(new Event('change'));
+                }
             }
         }
 
         function saveTeamData() {
-            const teamMembers = [];
-            for (let i = 0; i < teamSlotCount; i++) {
-                const input = document.getElementById(`player-${i}`);
-                if (input && input.value.trim()) {
-                    teamMembers.push(input.value.trim());
-                }
-            }
+            const teamSizeSelect = document.getElementById('team-size-select');
+            const teamSize = parseInt(teamSizeSelect.value);
 
-            if (teamMembers.length > 0) {
-                localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
-                localStorage.setItem('teamSize', teamMembers.length.toString());
-                document.getElementById('team-error').style.display = 'none';
-            } else {
+            if (!teamSize || teamSize < 1 || teamSize > 4) {
                 localStorage.removeItem('teamMembers');
                 localStorage.removeItem('teamSize');
+                localStorage.removeItem('currentPlayerIndex');
+                document.getElementById('team-error').style.display = 'none';
+                return;
             }
-            
+
+            // Create team members array with code names
+            const teamMembers = CODE_NAMES.slice(0, teamSize);
+            localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
+            localStorage.setItem('teamSize', teamSize.toString());
+
             // Save current player index
-            const selectedPlayer = document.querySelector('input[name="current-player"]:checked');
-            if (selectedPlayer) {
-                localStorage.setItem('currentPlayerIndex', selectedPlayer.value);
+            const selectedCodeName = document.querySelector('input[name="code-name"]:checked');
+            if (selectedCodeName) {
+                localStorage.setItem('currentPlayerIndex', selectedCodeName.value);
+                document.getElementById('team-error').style.display = 'none';
             } else {
                 localStorage.removeItem('currentPlayerIndex');
             }
         }
 
         function loadTeamData() {
-            const teamMembers = JSON.parse(localStorage.getItem('teamMembers') || '[]');
-            if (teamMembers.length > 0) {
-                teamSlotCount = 0;
-                const slots = document.getElementById('team-slots');
-                slots.innerHTML = '';
-                teamMembers.forEach((name, index) => {
-                    addTeamSlot();
-                    const input = document.getElementById(`player-${index}`);
-                    if (input) input.value = name;
-                });
-                
-                // Restore selected player
-                const currentPlayerIndex = localStorage.getItem('currentPlayerIndex');
-                if (currentPlayerIndex !== null) {
-                    const radio = document.getElementById(`player-radio-${currentPlayerIndex}`);
-                    if (radio) radio.checked = true;
+            const teamSize = parseInt(localStorage.getItem('teamSize') || '0');
+            const currentPlayerIndex = localStorage.getItem('currentPlayerIndex');
+
+            if (teamSize > 0 && teamSize <= 4) {
+                // Restore team size selection
+                const teamSizeSelect = document.getElementById('team-size-select');
+                const currentValue = teamSizeSelect.value;
+                const newValue = teamSize.toString();
+
+                // Only set value if it's different to avoid triggering onchange unnecessarily
+                if (currentValue !== newValue) {
+                    // Temporarily remove event listener to prevent recursion
+                    teamSizeSelect.removeEventListener('change', updateCodeNameOptions);
+                    teamSizeSelect.value = newValue;
+                    teamSizeSelect.addEventListener('change', updateCodeNameOptions);
                 }
-            } else {
-                // Start with one empty slot
-                addTeamSlot();
+
+                // Now call updateCodeNameOptions once (it will restore the radio selection internally)
+                updateCodeNameOptions();
             }
         }
 
         function startGame() {
-            const teamMembers = JSON.parse(localStorage.getItem('teamMembers') || '[]');
-            if (teamMembers.length === 0) {
-                document.getElementById('team-error').textContent = 'Please enter at least one team member name.';
+            const teamSizeSelect = document.getElementById('team-size-select');
+            const teamSize = parseInt(teamSizeSelect.value);
+
+            if (!teamSize || teamSize < 1 || teamSize > 4) {
+                document.getElementById('team-error').textContent = 'Please select the number of players on your team.';
                 document.getElementById('team-error').style.display = 'block';
                 return;
             }
-            
-            // Check if a player is selected
-            const selectedPlayer = document.querySelector('input[name="current-player"]:checked');
-            if (!selectedPlayer) {
-                document.getElementById('team-error').textContent = 'Please select which player you are by clicking "This is me" next to your name.';
+
+            // Check if a code name is selected
+            const selectedCodeName = document.querySelector('input[name="code-name"]:checked');
+            if (!selectedCodeName) {
+                document.getElementById('team-error').textContent = 'Please select your code name.';
                 document.getElementById('team-error').style.display = 'block';
                 return;
             }
+
+            // Save team data one more time
+            saveTeamData();
 
             // Start a new game
             GameState.startNewGame();
@@ -311,8 +375,14 @@
             window.location.href = 'game.html';
         }
 
-        // Load team data on page load
-        window.addEventListener('DOMContentLoaded', loadTeamData);
+        // Attach event listener for team size select after DOM loads
+        window.addEventListener('DOMContentLoaded', function () {
+            const teamSizeSelect = document.getElementById('team-size-select');
+            if (teamSizeSelect) {
+                teamSizeSelect.addEventListener('change', updateCodeNameOptions);
+            }
+            loadTeamData();
+        });
     </script>
 </body>
 

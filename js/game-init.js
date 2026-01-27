@@ -178,15 +178,25 @@ async function initGame() {
     setupDiscoveryLocations();
     
     // Configure submit button and initial view based on completion state
+    // Only first player (index 0) can access form selection
+    const currentPlayerIndex = GameState.getCurrentPlayerIndex();
+    const isFirstPlayer = currentPlayerIndex === 0;
+    
     if (GameState.isGameCompleted()) {
-        // Completed game: allow players to go directly to the form selection
-        showFormSelection();
+        // Completed game: allow first player to go directly to the form selection
+        if (isFirstPlayer) {
+            showFormSelection();
+        }
     } else {
-        // In-progress game: show submit button to open form selection
+        // In-progress game: show submit button only to first player
         const submitBtn = document.getElementById('submit-form-btn');
         if (submitBtn) {
-            submitBtn.style.display = 'block';
-            submitBtn.textContent = 'Submit Authorization Form';
+            if (isFirstPlayer) {
+                submitBtn.style.display = 'block';
+                submitBtn.textContent = 'Submit Authorization Form';
+            } else {
+                submitBtn.style.display = 'none';
+            }
         }
     }
 }
@@ -468,26 +478,67 @@ function handleTimeExpired() {
         item.style.opacity = '0.5';
     });
     
-    // Prompt player via modal to proceed to decision page
-    if (typeof UI !== 'undefined' && typeof UI.showModal === 'function') {
-        UI.showModal(
-            'Decision Time',
-            'Time is running out. You must now select an authorization form.',
-            [
-                {
-                    text: 'Continue to Decision',
-                    class: 'modal-button-primary',
-                    onclick: 'UI.hideModal(); showFormSelection();'
-                }
-            ]
-        );
+    // Only first player can access form selection
+    const currentPlayerIndex = GameState.getCurrentPlayerIndex();
+    const isFirstPlayer = currentPlayerIndex === 0;
+    
+    if (isFirstPlayer) {
+        // Prompt first player via modal to proceed to decision page
+        if (typeof UI !== 'undefined' && typeof UI.showModal === 'function') {
+            UI.showModal(
+                'Decision Time',
+                'Time is running out. You must now select an authorization form.',
+                [
+                    {
+                        text: 'Continue to Decision',
+                        class: 'modal-button-primary',
+                        onclick: 'UI.hideModal(); showFormSelection();'
+                    }
+                ]
+            );
+        } else {
+            // Fallback if modal is unavailable
+            showFormSelection();
+        }
     } else {
-        // Fallback if modal is unavailable
-        showFormSelection();
+        // Other players see a message that only the team captain can submit
+        if (typeof UI !== 'undefined' && typeof UI.showModal === 'function') {
+            UI.showModal(
+                'Decision Time',
+                'Time is running out. Only the team captain (Heart) can submit the authorization form.',
+                [
+                    {
+                        text: 'OK',
+                        class: 'modal-button-primary',
+                        onclick: 'UI.hideModal();'
+                    }
+                ]
+            );
+        }
     }
 }
 
 function showFormSelection() {
+    // Only first player (index 0) can access form selection
+    const currentPlayerIndex = GameState.getCurrentPlayerIndex();
+    if (currentPlayerIndex !== 0) {
+        // Show error message to non-first players
+        if (typeof UI !== 'undefined' && typeof UI.showModal === 'function') {
+            UI.showModal(
+                'Access Restricted',
+                'Only the team captain (Heart) can submit the authorization form.',
+                [
+                    {
+                        text: 'OK',
+                        class: 'modal-button-primary',
+                        onclick: 'UI.hideModal();'
+                    }
+                ]
+            );
+        }
+        return;
+    }
+    
     const forms = [];
     
     // Form A - always available
