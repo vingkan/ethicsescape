@@ -6,14 +6,6 @@ Web application and clues for ethics escape room about torture.
 - [Live Website for Decoding Clues](https://vingkan.github.io/ethicsescape/decoder)
 - [Fully Digital Version of the Game](https://vingkan.github.io/ethicsescape)
 
-## Digital Game Adaptation
-
-TODO:
-- [ ] Audit game text
-- [x] Improve puzzle form factor
-- [ ] Add debrief section
-- [ ] Improve content graders
-
 ## Physical Room Setup Instructions
 
 Coming soon...

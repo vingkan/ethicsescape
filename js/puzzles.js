@@ -721,15 +721,27 @@ const Puzzles = {
         const interveningResponse = await fetch('original/intervening.md');
         const interveningText = await interveningResponse.text();
         
+        // I thought this might be useful to you:
+
+        // > The Principle of Intervening Action
+        // > We are responsible for our actions, even if someone else caused us to act that way. We are not responsible for the consequences of actions taken by others because of us.
+        
+        // It is often misused, so you could check out some of what I hear get tossed around at the office. Decide which statements are supported by the principle of intervening action and those numbers should line up to form the password of a pamphlet I sent to the APA.
+
         const html = `
             <div class="intervening-action-puzzle">
-                <p>Read the principle and the statements below. Select which statements are supported by the principle of intervening action.</p>
-                
-                <blockquote>
-                    <strong>The Principle of Intervening Action:</strong><br>
-                    We are responsible for our actions, even if someone else caused us to act that way. 
-                    We are not responsible for the consequences of actions taken by others because of us.
-                </blockquote>
+                <h3>Email from Dr. Shannon Harp</h3>
+                <p>I thought this might be useful to you:</p>
+
+                <div class="clue-content">
+                    <blockquote>
+                        <strong>The Principle of Intervening Action:</strong><br>
+                        We are responsible for our actions, even if someone else caused us to act that way. 
+                        We are not responsible for the consequences of actions taken by others because of us.
+                    </blockquote>
+                </div>
+
+                <p>It is often misused, so you could check out some of what I hear get tossed around at the office. Decide which statements are supported by the principle of intervening action and those numbers should line up to form the password of a pamphlet I sent to the APA.</p>
                 
                 <div class="statements-list">
                     ${this.renderStatements(interveningText)}

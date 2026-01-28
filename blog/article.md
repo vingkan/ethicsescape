@@ -159,6 +159,7 @@ Players can exercise two rights:
 
 - **Self-Defense:** May take actions to protect civilians from ongoing attacks.
 - **Justice:** May take actions to fix an unfair distribution of pain or pleasure.
+
 Players must follow two duties:
 
 - **Harm Prevention:** May not take actions that harm innocent people.

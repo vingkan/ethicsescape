@@ -815,8 +815,11 @@ const UI = {
         const placeholder = document.getElementById('button-placeholder');
         
         if (discoveryGrid) discoveryGrid.style.display = 'grid';
-        if (clueViewer) clueViewer.style.display = 'none';
         if (formSelectionView) formSelectionView.style.display = 'none';
+        if (clueViewer) {
+            clueViewer.style.display = 'none';
+            clueViewer.classList.remove('debrief-view');
+        }
         
         // Update post-it note visibility and opacity
         if (typeof updatePostItVisibility === 'function') {
@@ -868,16 +871,19 @@ const UI = {
         
         // Show truth content; outcome (including any custom form) is handled separately
         if (clueViewer) {
-            const { title, body } = this.parseContent('truth', truthContent);
+            const {  body } = this.parseContent('truth', truthContent);
+            const resultsDate = this.getResultsDate();
             
             clueViewer.innerHTML = `
                 <div class="form-selection-header">
                     <button class="back-button" onclick="UI.returnToMainGame()">← Back to Investigation</button>
                 </div>
                 <div class="clue-header">
-                    <h2>${title}</h2>
+                    <h2>Results</h2>
                 </div>
                 <div class="clue-content">
+                    <p>It is now ${resultsDate}. The investigation and the incident are over.</p>
+                    <p>The public has learned the truth of what went down...</p>
                     ${this.renderMarkdown(body)}
                 </div>
             `;
@@ -931,7 +937,7 @@ const UI = {
 ${safeContent}
                     </pre>
                     <p style="margin-top: 1rem; color: var(--text-amber);">
-                        <strong>The game facilitator will now review your custom authorization form and inform you of the outcome based on the specific permissions and rules you included.</strong>
+                        <strong>Show this form to the game facilitator to receive your outcome.</strong>
                     </p>
                 </div>
             `;
@@ -939,25 +945,255 @@ ${safeContent}
         
         viewer.innerHTML += outcomeHTML;
         
-        // Show debrief placeholder
-        setTimeout(() => {
-            this.showDebriefPlaceholder();
-        }, 2000);
+        this.showDebriefView();
     },
 
-    showDebriefPlaceholder() {
+    showDebriefView() {
         const viewer = document.getElementById('clue-viewer');
         if (!viewer) return;
         
+        const selectedForm = GameState.getSelectedForm();
+        const team = GameState.getTeam();
+        const CODE_NAME_ICONS = ['♥', '♠', '♦', '♣'];
+        
+        // Load saved deontology and virtues data
+        const savedDeontology = JSON.parse(localStorage.getItem('debriefDeontology') || '{}');
+        const savedVirtues = JSON.parse(localStorage.getItem('debriefVirtues') || '{"deliberation":0,"passion":0,"justice":0}');
+        
+        // Build player votes section
+        let playerVotesHTML = '';
+        
+        if (selectedForm === 'form-c') {
+            // Custom form - show Support/Reject votes
+            const customFormData = JSON.parse(localStorage.getItem('customFormData') || '{}');
+            const signOffs = customFormData.signOffs || {};
+            
+            playerVotesHTML = team.members.map((codeName, index) => {
+                const icon = CODE_NAME_ICONS[index];
+                const signOff = signOffs[codeName] || { support: '', reason: '' };
+                const voteLabel = signOff.support === 'support' ? 'Support' : signOff.support === 'reject' ? 'Reject' : 'No vote';
+                return `
+                    <div class="team-slot">
+                        <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">${icon}</span>
+                            <span>${codeName}</span>
+                        </h3>
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong style="color: var(--text-amber);">Vote:</strong> ${voteLabel}
+                        </div>
+                        <div>
+                            <strong style="color: var(--text-amber);">Reason:</strong>
+                            <p style="margin-top: 0.5rem; color: var(--text-primary);">${signOff.reason || '(No reason provided)'}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            // Base forms - show Form A or Form B votes
+            const formSelections = JSON.parse(localStorage.getItem('formSelections') || '{}');
+            
+            playerVotesHTML = team.members.map((codeName, index) => {
+                const icon = CODE_NAME_ICONS[index];
+                const selection = formSelections[codeName] || { form: '', reason: '' };
+                let voteLabel = 'No vote';
+                if (selection.form === 'form-a') {
+                    voteLabel = 'Form A: Enhanced Interrogation';
+                } else if (selection.form === 'form-b') {
+                    voteLabel = 'Form B: Psychologist';
+                }
+                return `
+                    <div class="team-slot">
+                        <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">${icon}</span>
+                            <span>${codeName}</span>
+                        </h3>
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong style="color: var(--text-amber);">Vote:</strong> ${voteLabel}
+                        </div>
+                        <div>
+                            <strong style="color: var(--text-amber);">Reason:</strong>
+                            <p style="margin-top: 0.5rem; color: var(--text-primary);">${selection.reason || '(No reason provided)'}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Build deontology section
+        const deontologyHTML = `
+            <div class="debrief-section">
+                <h3 style="color: var(--text-amber); margin-bottom: 1rem;">Deontology Reflection</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    Check each right or duty that your team upheld during this scenario.
+                </p>
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Rights</h4>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color);">
+                            <input type="checkbox" 
+                                   id="deontology-self-defense" 
+                                   ${savedDeontology.selfDefense ? 'checked' : ''}
+                                   onchange="UI.updateDebriefDeontology('selfDefense', this.checked)"
+                                   style="margin-top: 0.25rem; cursor: pointer;">
+                            <div>
+                                <strong style="color: var(--text-amber);">Self-Defense:</strong>
+                                <span style="color: var(--text-primary);"> May take actions to protect civilians from ongoing attacks.</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color);">
+                            <input type="checkbox" 
+                                   id="deontology-justice" 
+                                   ${savedDeontology.justice ? 'checked' : ''}
+                                   onchange="UI.updateDebriefDeontology('justice', this.checked)"
+                                   style="margin-top: 0.25rem; cursor: pointer;">
+                            <div>
+                                <strong style="color: var(--text-amber);">Justice:</strong>
+                                <span style="color: var(--text-primary);"> May take actions to fix an unfair distribution of pain or pleasure.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Duties</h4>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color);">
+                            <input type="checkbox" 
+                                   id="deontology-harm-prevention" 
+                                   ${savedDeontology.harmPrevention ? 'checked' : ''}
+                                   onchange="UI.updateDebriefDeontology('harmPrevention', this.checked)"
+                                   style="margin-top: 0.25rem; cursor: pointer;">
+                            <div>
+                                <strong style="color: var(--text-amber);">Harm Prevention:</strong>
+                                <span style="color: var(--text-primary);"> May not take actions that harm innocent people.</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color);">
+                            <input type="checkbox" 
+                                   id="deontology-fidelity" 
+                                   ${savedDeontology.fidelity ? 'checked' : ''}
+                                   onchange="UI.updateDebriefDeontology('fidelity', this.checked)"
+                                   style="margin-top: 0.25rem; cursor: pointer;">
+                            <div>
+                                <strong style="color: var(--text-amber);">Fidelity:</strong>
+                                <span style="color: var(--text-primary);"> May not take actions that violate promises or deceive people.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Build virtues section
+        const virtuesHTML = `
+            <div class="debrief-section">
+                <h3 style="color: var(--text-amber); margin-bottom: 1rem;">Virtues Reflection</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    Rate your team's performance on each virtue scale. The mean (center) represents the ideal balance.
+                </p>
+                ${this.buildVirtueSlider('deliberation', 'Deliberation', 'Over-Cautiousness', 'Recklessness', savedVirtues.deliberation || 0)}
+                ${this.buildVirtueSlider('passion', 'Passion', 'Zeal', 'Apathy', savedVirtues.passion || 0)}
+                ${this.buildVirtueSlider('justice', 'Justice', 'Leniency', 'Maleficence', savedVirtues.justice || 0)}
+            </div>
+        `;
+        
         const debriefHTML = `
-            <div class="debrief-placeholder">
-                <h2>Debrief</h2>
-                <p>The debrief section will be added in a future update.</p>
-                <p>Thank you for playing the Ethics Escape Room.</p>
+            <div class="debrief-container" style="margin-top: 2rem;">
+                <h2 style="color: var(--text-amber); margin-bottom: 1.5rem;">Debrief</h2>
+                
+                <div class="debrief-section" style="margin-bottom: 2rem;">
+                    <h3 style="color: var(--text-amber); margin-bottom: 1rem;">Team Votes and Reasons</h3>
+                    ${playerVotesHTML}
+                </div>
+                
+                ${deontologyHTML}
+                
+                ${virtuesHTML}
             </div>
         `;
         
         viewer.innerHTML += debriefHTML;
+        viewer.classList.add('debrief-view');
+    },
+    
+    buildVirtueSlider(virtueId, virtueName, excessLabel, deficiencyLabel, currentValue) {
+        // Clamp value to -100 to 100 range
+        const value = Math.max(-100, Math.min(100, currentValue));
+        
+        // Calculate visual position (0-100% for CSS)
+        const visualPosition = ((value + 100) / 200) * 100;
+        
+        // Determine position label
+        let positionLabel = virtueName;
+        if (value < -33) {
+            positionLabel = excessLabel;
+        } else if (value > 33) {
+            positionLabel = deficiencyLabel;
+        }
+        
+        return `
+            <div class="virtue-slider-container" style="margin-bottom: 2rem;">
+                <h4 style="color: var(--text-primary); margin-bottom: 0.75rem;">${virtueName}</h4>
+                <div class="virtue-scale" style="position: relative; margin-bottom: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        <span data-excess-label="${virtueId}">${excessLabel}</span>
+                        <span style="color: var(--text-amber); font-weight: bold;" data-virtue-name="${virtueId}">${virtueName}</span>
+                        <span data-deficiency-label="${virtueId}">${deficiencyLabel}</span>
+                    </div>
+                    <div style="position: relative; height: 40px; background: var(--bg-darker); border: 2px solid var(--border-color); display: flex; align-items: center;">
+                        <div style="position: absolute; left: 50%; width: 2px; height: 100%; background: var(--text-amber); transform: translateX(-50%);"></div>
+                        <input type="range" 
+                               id="virtue-${virtueId}" 
+                               min="-100" 
+                               max="100" 
+                               value="${value}"
+                               step="1"
+                               oninput="UI.updateDebriefVirtue('${virtueId}', '${excessLabel}', '${virtueName}', '${deficiencyLabel}', this.value)"
+                               style="width: 100%; height: 6px; background: transparent; outline: none; cursor: pointer; z-index: 1; position: relative;"
+                               class="virtue-range-input">
+                        <div id="virtue-indicator-${virtueId}" style="position: absolute; left: ${visualPosition}%; transform: translateX(-50%); top: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: var(--text-amber); border: 2px solid var(--bg-dark); border-radius: 50%; pointer-events: none; z-index: 2;"></div>
+                    </div>
+                    <div id="virtue-label-${virtueId}" style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                        Current position: ${value > 0 ? '+' : ''}${value} (${positionLabel})
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    updateDebriefDeontology(key, value) {
+        const deontology = JSON.parse(localStorage.getItem('debriefDeontology') || '{}');
+        deontology[key] = value;
+        localStorage.setItem('debriefDeontology', JSON.stringify(deontology));
+    },
+    
+    updateDebriefVirtue(virtueId, excessLabel, virtueName, deficiencyLabel, value) {
+        const virtues = JSON.parse(localStorage.getItem('debriefVirtues') || '{"deliberation":0,"passion":0,"justice":0}');
+        const numValue = parseInt(value);
+        virtues[virtueId] = numValue;
+        localStorage.setItem('debriefVirtues', JSON.stringify(virtues));
+        
+        // Update the visual indicator position
+        const indicator = document.getElementById(`virtue-indicator-${virtueId}`);
+        if (indicator) {
+            const visualPosition = ((numValue + 100) / 200) * 100;
+            indicator.style.left = `${visualPosition}%`;
+        }
+        
+        // Update the label
+        const label = document.getElementById(`virtue-label-${virtueId}`);
+        if (label) {
+            let positionLabel = virtueName;
+            if (numValue < -33) {
+                positionLabel = excessLabel;
+            } else if (numValue > 33) {
+                positionLabel = deficiencyLabel;
+            }
+            label.textContent = `Current position: ${numValue > 0 ? '+' : ''}${numValue} (${positionLabel})`;
+        }
     },
 
     animateClueDiscovery(element) {
@@ -1092,6 +1328,11 @@ ${safeContent}
 
     getAuthorizationDate() {
         const date = new Date();
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    },
+
+    getResultsDate() {
+        const date = new Date(Date.now() + (1000 * 60 * 60 * 24));
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     },
     

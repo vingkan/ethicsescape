@@ -914,6 +914,125 @@ p {
     color: var(--text-secondary);
 }
 
+/* Debrief Section */
+.debrief-container {
+    margin: 2rem 0;
+}
+
+.debrief-section {
+    margin-bottom: 2rem;
+}
+
+.debrief-section:last-child {
+    margin-bottom: 0;
+}
+
+#clue-viewer.debrief-view {
+    margin: 0 auto;
+    border: none;
+    background: none;
+    max-width: 750px;
+}
+
+/* Virtue Sliders */
+.virtue-slider-container {
+    margin-bottom: 2rem;
+}
+
+.virtue-scale {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.virtue-range-input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    z-index: 1;
+    position: relative;
+}
+
+.virtue-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--text-amber);
+    border: 2px solid var(--bg-dark);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    z-index: 3;
+    opacity: 0;
+}
+
+.virtue-range-input::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--text-amber);
+    border: 2px solid var(--bg-dark);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    z-index: 3;
+    opacity: 0;
+}
+
+.virtue-range-input::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: transparent;
+}
+
+.virtue-range-input::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: transparent;
+}
+
+.virtue-scale span {
+    width: 120px;
+    text-align: center;
+}
+
+.virtue-scale span:first-child {
+    text-align: left;
+}
+
+.virtue-scale span:last-child {
+    text-align: right;
+}
+
+/* Deontology Checkboxes */
+.debrief-section label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.75rem;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.debrief-section label:hover {
+    border-color: var(--text-amber);
+    background: var(--bg-panel);
+}
+
+.debrief-section input[type="checkbox"] {
+    margin-top: 0.25rem;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--text-amber);
+    flex-shrink: 0;
+}
+
 /* MDOS Chart */
 .mdos-chart-container {
     position: relative;
