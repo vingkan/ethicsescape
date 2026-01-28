@@ -71,14 +71,23 @@ const UI = {
     },
 
     updateClueCount() {
+        const ALWAYS_AVAILABLE_CLUES = new Set(['briefing', 'mdos-chart', 'custom-form', 'truth']);
         const countEl = document.getElementById('clue-count');
         if (countEl) {
-            // Only count custom-form clue (available to all players)
-            const unlockedIds = GameState.getUnlockedClues();
-            const customFormUnlocked = unlockedIds.includes('custom-form');
+            const team = GameState.getTeam();
+            const playerIndex = GameState.getCurrentPlayerIndex();
+            const teamSize = team.size || 1; // Default to 1 if no team data
             
-            const unlockedCount = customFormUnlocked ? 1 : 0;
-            const totalCount = 1;
+            // Get all clues available to this player
+            const availableClues = GameState.getPlayerClues(playerIndex, teamSize);
+            
+            // Exclude always-available clues from count
+            const cluesToCount = availableClues.filter(clueId => !ALWAYS_AVAILABLE_CLUES.has(clueId));
+            
+            // Count how many of the available clues are unlocked
+            const unlockedIds = new Set(GameState.getUnlockedClues());
+            const unlockedCount = cluesToCount.filter(clueId => unlockedIds.has(clueId)).length;
+            const totalCount = cluesToCount.length;
             
             countEl.textContent = `${unlockedCount} / ${totalCount}`;
         }

@@ -9,6 +9,8 @@ import {
   checkClueAccess,
   configurePlayer,
   getExpectedClues,
+  getExpectedClueCount,
+  getClueCount,
 } from './helpers/game-helpers.js';
 
 // Server URLs - Playwright manages these via webServer config
@@ -267,5 +269,200 @@ test.describe('Clue Distribution', () => {
     await context2.close();
     await context3.close();
     await context4.close();
+  });
+});
+
+test.describe('Clue Counter', () => {
+  test('1 player - should show correct initial clue count', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const baseUrl = getServerUrl(4000);
+
+    await configurePlayer(page, baseUrl, 1, 0);
+
+    // Wait for game to fully load
+    await page.waitForSelector('#clue-count', { timeout: 5000 });
+
+    const clueCount = await getClueCount(page);
+    const expectedCount = getExpectedClueCount(0, 1);
+
+    expect(clueCount).not.toBeNull();
+    expect(clueCount.unlocked).toBe(0);
+    expect(clueCount.total).toBe(expectedCount);
+    await context.close();
+  });
+
+  test('2 players - should show correct initial clue count for each player', async ({ browser }) => {
+    const baseUrl1 = getServerUrl(4000);
+    const baseUrl2 = getServerUrl(4001);
+
+    const context1 = await browser.newContext();
+    const page1 = await context1.newPage();
+    await configurePlayer(page1, baseUrl1, 2, 0);
+
+    const context2 = await browser.newContext();
+    const page2 = await context2.newPage();
+    await configurePlayer(page2, baseUrl2, 2, 1);
+
+    // Wait for game to fully load
+    await page1.waitForSelector('#clue-count', { timeout: 5000 });
+    await page2.waitForSelector('#clue-count', { timeout: 5000 });
+
+    const clueCount1 = await getClueCount(page1);
+    const clueCount2 = await getClueCount(page2);
+    const expectedCount1 = getExpectedClueCount(0, 2);
+    const expectedCount2 = getExpectedClueCount(1, 2);
+
+    expect(clueCount1).not.toBeNull();
+    expect(clueCount1.unlocked).toBe(0);
+    expect(clueCount1.total).toBe(expectedCount1);
+
+    expect(clueCount2).not.toBeNull();
+    expect(clueCount2.unlocked).toBe(0);
+    expect(clueCount2.total).toBe(expectedCount2);
+
+    await context1.close();
+    await context2.close();
+  });
+
+  test('3 players - should show correct initial clue count for each player', async ({ browser }) => {
+    const baseUrl1 = getServerUrl(4000);
+    const baseUrl2 = getServerUrl(4001);
+    const baseUrl3 = getServerUrl(4002);
+
+    const context1 = await browser.newContext();
+    const page1 = await context1.newPage();
+    await configurePlayer(page1, baseUrl1, 3, 0);
+
+    const context2 = await browser.newContext();
+    const page2 = await context2.newPage();
+    await configurePlayer(page2, baseUrl2, 3, 1);
+
+    const context3 = await browser.newContext();
+    const page3 = await context3.newPage();
+    await configurePlayer(page3, baseUrl3, 3, 2);
+
+    // Wait for game to fully load
+    await page1.waitForSelector('#clue-count', { timeout: 5000 });
+    await page2.waitForSelector('#clue-count', { timeout: 5000 });
+    await page3.waitForSelector('#clue-count', { timeout: 5000 });
+
+    const clueCount1 = await getClueCount(page1);
+    const clueCount2 = await getClueCount(page2);
+    const clueCount3 = await getClueCount(page3);
+    const expectedCount1 = getExpectedClueCount(0, 3);
+    const expectedCount2 = getExpectedClueCount(1, 3);
+    const expectedCount3 = getExpectedClueCount(2, 3);
+
+    expect(clueCount1).not.toBeNull();
+    expect(clueCount1.unlocked).toBe(0);
+    expect(clueCount1.total).toBe(expectedCount1);
+
+    expect(clueCount2).not.toBeNull();
+    expect(clueCount2.unlocked).toBe(0);
+    expect(clueCount2.total).toBe(expectedCount2);
+
+    expect(clueCount3).not.toBeNull();
+    expect(clueCount3.unlocked).toBe(0);
+    expect(clueCount3.total).toBe(expectedCount3);
+
+    await context1.close();
+    await context2.close();
+    await context3.close();
+  });
+
+  test('4 players - should show correct initial clue count for each player', async ({ browser }) => {
+    const baseUrl1 = getServerUrl(4000);
+    const baseUrl2 = getServerUrl(4001);
+    const baseUrl3 = getServerUrl(4002);
+    const baseUrl4 = getServerUrl(4003);
+
+    const context1 = await browser.newContext();
+    const page1 = await context1.newPage();
+    await configurePlayer(page1, baseUrl1, 4, 0);
+
+    const context2 = await browser.newContext();
+    const page2 = await context2.newPage();
+    await configurePlayer(page2, baseUrl2, 4, 1);
+
+    const context3 = await browser.newContext();
+    const page3 = await context3.newPage();
+    await configurePlayer(page3, baseUrl3, 4, 2);
+
+    const context4 = await browser.newContext();
+    const page4 = await context4.newPage();
+    await configurePlayer(page4, baseUrl4, 4, 3);
+
+    // Wait for game to fully load
+    await page1.waitForSelector('#clue-count', { timeout: 5000 });
+    await page2.waitForSelector('#clue-count', { timeout: 5000 });
+    await page3.waitForSelector('#clue-count', { timeout: 5000 });
+    await page4.waitForSelector('#clue-count', { timeout: 5000 });
+
+    const clueCount1 = await getClueCount(page1);
+    const clueCount2 = await getClueCount(page2);
+    const clueCount3 = await getClueCount(page3);
+    const clueCount4 = await getClueCount(page4);
+    const expectedCount1 = getExpectedClueCount(0, 4);
+    const expectedCount2 = getExpectedClueCount(1, 4);
+    const expectedCount3 = getExpectedClueCount(2, 4);
+    const expectedCount4 = getExpectedClueCount(3, 4);
+
+    expect(clueCount1).not.toBeNull();
+    expect(clueCount1.unlocked).toBe(0);
+    expect(clueCount1.total).toBe(expectedCount1);
+
+    expect(clueCount2).not.toBeNull();
+    expect(clueCount2.unlocked).toBe(0);
+    expect(clueCount2.total).toBe(expectedCount2);
+
+    expect(clueCount3).not.toBeNull();
+    expect(clueCount3.unlocked).toBe(0);
+    expect(clueCount3.total).toBe(expectedCount3);
+
+    expect(clueCount4).not.toBeNull();
+    expect(clueCount4.unlocked).toBe(0);
+    expect(clueCount4.total).toBe(expectedCount4);
+
+    await context1.close();
+    await context2.close();
+    await context3.close();
+    await context4.close();
+  });
+
+  test('should increment clue count when clues are unlocked', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const baseUrl = getServerUrl(4000);
+
+    await configurePlayer(page, baseUrl, 1, 0);
+
+    // Wait for game to fully load
+    await page.waitForSelector('#clue-count', { timeout: 5000 });
+
+    // Check initial count
+    let clueCount = await getClueCount(page);
+    expect(clueCount.unlocked).toBe(0);
+    expect(clueCount.total).toBe(12);
+
+    // Click on form A (should unlock it)
+    await page.click('#discovery-manila-folder-a');
+    await page.waitForTimeout(500); // Wait for update
+
+    // Check count after unlocking briefing
+    clueCount = await getClueCount(page);
+    expect(clueCount.unlocked).toBe(1);
+    expect(clueCount.total).toBe(12);
+
+    // Click on form B (should unlock it)
+    await page.click('#discovery-briefcase-b');
+    await page.waitForTimeout(500); // Wait for update
+
+    // Check count after unlocking mdos-chart
+    clueCount = await getClueCount(page);
+    expect(clueCount.unlocked).toBe(2);
+    expect(clueCount.total).toBe(12);
+
+    await context.close();
   });
 });

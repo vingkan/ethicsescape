@@ -3,10 +3,11 @@
  */
 
 /**
- * Select team size from dropdown
+ * Select team size from radio tiles
  */
 export async function selectTeamSize(page, size) {
-  await page.selectOption('#team-size-select', size.toString());
+  const radioId = `team-size-${size}`;
+  await page.check(`#${radioId}`);
   // Wait for code name selection to appear
   await page.waitForSelector('#code-name-selection', { state: 'visible' });
 }
@@ -142,8 +143,8 @@ export async function getTeamData(page) {
  */
 export async function navigateToTeamSelection(page, baseUrl) {
   await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
-  // Wait for a key element to be present instead of networkidle
-  await page.waitForSelector('#team-size-select', { timeout: 10000 });
+  // Wait for team size tiles container to be present instead of dropdown
+  await page.waitForSelector('#team-size-tiles', { timeout: 10000 });
 }
 
 /**
@@ -233,4 +234,30 @@ export function getExpectedClues(playerIndex, teamSize) {
   }
   
   return [...alwaysAvailable, ...playerClues];
+}
+
+/**
+ * Get expected clue count for a player (excluding 'truth' which is not counted)
+ */
+export function getExpectedClueCount(playerIndex, teamSize) {
+  const ALWAYS_AVAILABLE_CLUES = new Set(['briefing', 'mdos-chart', 'custom-form', 'truth']);
+  const expectedClues = getExpectedClues(playerIndex, teamSize);
+  // Exclude always-available clues from count
+  return expectedClues.filter(clueId => !ALWAYS_AVAILABLE_CLUES.has(clueId)).length;
+}
+
+/**
+ * Get the clue count displayed in the header
+ * Returns an object with { unlocked, total } parsed from "X / Y" format
+ */
+export async function getClueCount(page) {
+  const clueCountText = await page.locator('#clue-count').textContent();
+  const match = clueCountText.match(/(\d+)\s*\/\s*(\d+)/);
+  if (match) {
+    return {
+      unlocked: parseInt(match[1]),
+      total: parseInt(match[2])
+    };
+  }
+  return null;
 }

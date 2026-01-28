@@ -59,8 +59,9 @@
         .warning-box {
             background: var(--accent-red);
             border: 2px solid var(--text-red);
-            padding: 1.5rem;
-            margin: 2rem 0;
+            padding: 1rem 1.5rem;
+            margin: 0;
+            margin-bottom: 2rem;
         }
 
         .warning-box h3 {
@@ -127,7 +128,7 @@
                     </p>
                 </div>
 
-                <h2>Welcome</h2>
+                <h2>Introduction</h2>
                 <p>Welcome to the Department of Homeland Security (DHS). You work for a team called the Moral Defense
                     Oversight Service (MDOS) that provides ethical guidance to DHS. We have invited you to take part in
                     a
@@ -162,36 +163,24 @@
                     <li>When time expires, you must select one of the authorization forms</li>
                     <li>Your progress is automatically saved... but the timer keeps running</li>
                 </ul>
-
-                <h2>Objective</h2>
-                <p>Your goal is to gather information about the ethical dimensions of this scenario and decide which
-                    authorization form should be used for interrogating the suspect. You may discover a third, custom
-                    form
-                    option through your investigation.</p>
             </div>
 
             <div class="intro-content" id="team-selection-section">
                 <h2>Team Selection</h2>
-                <p>Select the number of players on your team, then choose your code name. Each player on your team must
-                    choose a different code name.</p>
 
                 <div style="margin-bottom: 1.5rem;">
-                    <label for="team-size-select"
-                        style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Number of
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Number of
                         Players:</label>
-                    <select id="team-size-select"
-                        style="width: 100%; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1rem;">
-                        <option value="">Select team size...</option>
-                        <option value="1">1 Player</option>
-                        <option value="2">2 Players</option>
-                        <option value="3">3 Players</option>
-                        <option value="4">4 Players</option>
-                    </select>
+                    <div id="team-size-tiles"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                    </div>
                 </div>
 
                 <div id="code-name-selection" style="display: none;">
                     <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Choose Your Code
                         Name:</label>
+                    <p style="margin-bottom: 1rem; color: var(--text-secondary);">Each player on your team must choose a
+                        different code name.</p>
                     <div id="code-name-tiles"
                         style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     </div>
@@ -214,10 +203,10 @@
         // CODE_NAMES and CODE_NAME_ICONS are already defined in game.js
         // Make function globally accessible
         window.updateCodeNameOptions = function updateCodeNameOptions() {
-            const teamSizeSelect = document.getElementById('team-size-select');
+            const selectedTeamSize = document.querySelector('input[name="team-size"]:checked');
             const codeNameSelection = document.getElementById('code-name-selection');
             const codeNameTiles = document.getElementById('code-name-tiles');
-            const teamSize = parseInt(teamSizeSelect.value);
+            const teamSize = selectedTeamSize ? parseInt(selectedTeamSize.value) : 0;
 
             if (!teamSize || teamSize < 1 || teamSize > 4) {
                 codeNameSelection.style.display = 'none';
@@ -298,8 +287,8 @@
         }
 
         function saveTeamData() {
-            const teamSizeSelect = document.getElementById('team-size-select');
-            const teamSize = parseInt(teamSizeSelect.value);
+            const selectedTeamSize = document.querySelector('input[name="team-size"]:checked');
+            const teamSize = selectedTeamSize ? parseInt(selectedTeamSize.value) : 0;
 
             if (!teamSize || teamSize < 1 || teamSize > 4) {
                 localStorage.removeItem('teamMembers');
@@ -330,26 +319,28 @@
 
             if (teamSize > 0 && teamSize <= 4) {
                 // Restore team size selection
-                const teamSizeSelect = document.getElementById('team-size-select');
-                const currentValue = teamSizeSelect.value;
-                const newValue = teamSize.toString();
-
-                // Only set value if it's different to avoid triggering onchange unnecessarily
-                if (currentValue !== newValue) {
-                    // Temporarily remove event listener to prevent recursion
-                    teamSizeSelect.removeEventListener('change', updateCodeNameOptions);
-                    teamSizeSelect.value = newValue;
-                    teamSizeSelect.addEventListener('change', updateCodeNameOptions);
+                const teamSizeRadio = document.getElementById(`team-size-${teamSize}`);
+                if (teamSizeRadio) {
+                    // Update tile styles
+                    document.querySelectorAll('#team-size-tiles label').forEach(t => {
+                        if (t.querySelector('input').id === `team-size-${teamSize}`) {
+                            t.style.borderColor = 'var(--text-amber)';
+                            t.style.background = 'var(--bg-panel)';
+                        } else {
+                            t.style.borderColor = 'var(--border-color)';
+                            t.style.background = 'var(--bg-darker)';
+                        }
+                    });
+                    teamSizeRadio.checked = true;
+                    // Call updateCodeNameOptions directly (don't trigger change event to avoid recursion)
+                    updateCodeNameOptions();
                 }
-
-                // Now call updateCodeNameOptions once (it will restore the radio selection internally)
-                updateCodeNameOptions();
             }
         }
 
         function startGame() {
-            const teamSizeSelect = document.getElementById('team-size-select');
-            const teamSize = parseInt(teamSizeSelect.value);
+            const selectedTeamSize = document.querySelector('input[name="team-size"]:checked');
+            const teamSize = selectedTeamSize ? parseInt(selectedTeamSize.value) : 0;
 
             if (!teamSize || teamSize < 1 || teamSize > 4) {
                 document.getElementById('team-error').textContent = 'Please select the number of players on your team.';
@@ -375,11 +366,56 @@
             window.location.href = 'game.html';
         }
 
-        // Attach event listener for team size select after DOM loads
+        // Initialize team size radio tiles and attach event listeners after DOM loads
         window.addEventListener('DOMContentLoaded', function () {
-            const teamSizeSelect = document.getElementById('team-size-select');
-            if (teamSizeSelect) {
-                teamSizeSelect.addEventListener('change', updateCodeNameOptions);
+            const teamSizeTiles = document.getElementById('team-size-tiles');
+            if (teamSizeTiles) {
+                // Create radio tiles for team size (1-4 players)
+                for (let i = 1; i <= 4; i++) {
+                    const tile = document.createElement('label');
+                    tile.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: var(--bg-darker); border: 2px solid var(--border-color); cursor: pointer; transition: all 0.3s; font-family: "Courier New", monospace; white-space: nowrap;';
+                    tile.onmouseover = function () {
+                        if (!tile.querySelector('input').checked) {
+                            this.style.borderColor = 'var(--text-amber)';
+                            this.style.background = 'var(--bg-panel)';
+                        }
+                    };
+                    tile.onmouseout = function () {
+                        if (!tile.querySelector('input').checked) {
+                            this.style.borderColor = 'var(--border-color)';
+                            this.style.background = 'var(--bg-darker)';
+                        }
+                    };
+
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'team-size';
+                    radio.value = i.toString();
+                    radio.id = `team-size-${i}`;
+                    radio.style.cursor = 'pointer';
+                    radio.addEventListener('change', function () {
+                        // Update tile styles
+                        document.querySelectorAll('#team-size-tiles label').forEach(t => {
+                            if (t.querySelector('input').checked) {
+                                t.style.borderColor = 'var(--text-amber)';
+                                t.style.background = 'var(--bg-panel)';
+                            } else {
+                                t.style.borderColor = 'var(--border-color)';
+                                t.style.background = 'var(--bg-darker)';
+                            }
+                        });
+                        updateCodeNameOptions();
+                        saveTeamData();
+                    });
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = i === 1 ? '1 Player' : `${i} Players`;
+                    nameSpan.style.cssText = 'color: var(--text-primary); white-space: nowrap;';
+
+                    tile.appendChild(radio);
+                    tile.appendChild(nameSpan);
+                    teamSizeTiles.appendChild(tile);
+                }
             }
             loadTeamData();
         });
