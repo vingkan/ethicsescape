@@ -75,7 +75,7 @@ const ClueSystem = {
         },
         'bentham-scales': {
             id: 'bentham-scales',
-            name: 'Bentham\'s Scales',
+            name: 'Bentham Scales',
             file: null, // Special: interactive puzzle
             encoded: false,
             unlocked: false,

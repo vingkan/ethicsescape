@@ -40,7 +40,7 @@ const discoveryLocations = [
     {
         id: 'bentham-worksheet',
         icon: '📊',
-        label: 'Bentham\'s Scales',
+        label: 'Bentham Scales',
         clueId: 'bentham-scales',
         type: 'puzzle', // Always accessible, not code-locked
         description: 'Quantify the threat assessment'
@@ -319,9 +319,6 @@ async function handleDiscoveryClick(location) {
                         </div>
                         <div class="code-input-container">
                             <p>Establish secure connection to receive advisor transmission.</p>
-                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0;">
-                                <em>Enter the connection code to receive the transmission.</em>
-                            </p>
                             <input type="text" id="code-input" placeholder="Enter connection code" autocomplete="off" maxlength="10">
                             <button onclick="UI.submitCode('${location.clueId}')">Establish Connection</button>
                             <p id="code-error" class="error-message" style="display:none;"></p>

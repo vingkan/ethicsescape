@@ -265,9 +265,6 @@ const Puzzles = {
         
         const html = `
             <div class="steinhoff-puzzle">
-                <p>Match each example to the correct concept. The numbers from correctly matched examples will form the key.</p>
-                <p class="steinhoff-mobile-hint">On touch devices, tap an example, then tap a definition's drop zone to assign it.</p>
-                
                 <div class="matching-puzzle">
                     <div>
                         <h3>Definitions</h3>

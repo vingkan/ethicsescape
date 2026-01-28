@@ -147,19 +147,12 @@ const UI = {
         
         const clue = ClueSystem.getClue(clueId);
         
-        // Add hint for Shue clue
-        let hintText = '';
-        if (clueId === 'shue-essay') {
-            hintText = '<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;"><em>Hint: This document references a paper from a specific year. Historical documents may be encoded with publication dates.</em></p>';
-        }
-        
         viewer.innerHTML = `
             <div class="clue-header">
                 <h2>${clue.name}</h2>
             </div>
             <div class="code-input-container">
                 <p>Enter the code to unlock this document:</p>
-                ${hintText}
                 <input type="text" id="code-input" placeholder="Enter code" autocomplete="off" maxlength="10">
                 <button onclick="UI.submitCode('${clueId}')">Submit</button>
                 <p id="code-error" class="error-message" style="display:none;"></p>
