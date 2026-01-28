@@ -956,6 +956,21 @@ ${safeContent}
         const team = GameState.getTeam();
         const CODE_NAME_ICONS = ['♥', '♠', '♦', '♣'];
         
+        // Get timer information
+        const timerInfo = GameState.updateTimer();
+        const timeRemaining = `${timerInfo.minutes}:${timerInfo.seconds}`;
+        
+        // Get clue count information
+        const ALWAYS_AVAILABLE_CLUES = new Set(['briefing', 'mdos-chart', 'custom-form', 'truth']);
+        const playerIndex = GameState.getCurrentPlayerIndex();
+        const teamSize = team.size || 1;
+        const availableClues = GameState.getPlayerClues(playerIndex, teamSize);
+        const cluesToCount = availableClues.filter(clueId => !ALWAYS_AVAILABLE_CLUES.has(clueId));
+        const unlockedIds = new Set(GameState.getUnlockedClues());
+        const unlockedCount = cluesToCount.filter(clueId => unlockedIds.has(clueId)).length;
+        const totalCount = cluesToCount.length;
+        const clueCount = `${unlockedCount} / ${totalCount}`;
+        
         // Load saved deontology and virtues data
         const savedDeontology = JSON.parse(localStorage.getItem('debriefDeontology') || '{}');
         const savedVirtues = JSON.parse(localStorage.getItem('debriefVirtues') || '{"deliberation":0,"passion":0,"justice":0}');
@@ -1104,6 +1119,19 @@ ${safeContent}
             <div class="debrief-container" style="margin-top: 2rem;">
                 <h2 style="color: var(--text-amber); margin-bottom: 1.5rem;">Debrief</h2>
                 
+                <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: var(--bg-darker); border: 1px solid var(--border-color);">
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <div>
+                            <strong style="color: var(--text-amber);">Time Remaining:</strong>
+                            <span style="color: var(--text-primary);"> ${timeRemaining}</span>
+                        </div>
+                        <div>
+                            <strong style="color: var(--text-amber);">Clues Unlocked:</strong>
+                            <span style="color: var(--text-primary);"> ${clueCount}</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="debrief-section" style="margin-bottom: 2rem;">
                     <h3 style="color: var(--text-amber); margin-bottom: 1rem;">Team Votes and Reasons</h3>
                     ${playerVotesHTML}
@@ -1112,6 +1140,8 @@ ${safeContent}
                 ${deontologyHTML}
                 
                 ${virtuesHTML}
+
+                <button onclick="window.print()" class="print-button">Print Results</button>
             </div>
         `;
         
@@ -1143,8 +1173,16 @@ ${safeContent}
                         <span style="color: var(--text-amber); font-weight: bold;" data-virtue-name="${virtueId}">${virtueName}</span>
                         <span data-deficiency-label="${virtueId}">${deficiencyLabel}</span>
                     </div>
-                    <div style="position: relative; height: 40px; background: var(--bg-darker); border: 2px solid var(--border-color); display: flex; align-items: center;">
-                        <div style="position: absolute; left: 50%; width: 2px; height: 100%; background: var(--text-amber); transform: translateX(-50%);"></div>
+                    <div class="virtue-scale-track" style="position: relative; height: 30px; padding: 10px 0;">
+                        <!-- Horizontal line -->
+                        <div class="virtue-scale-line" style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: var(--border-color); transform: translateY(-50%);"></div>
+                        <!-- Hash mark at left (0%) -->
+                        <div class="virtue-hash-mark virtue-hash-left" style="position: absolute; left: 0; top: 50%; width: 2px; height: 12px; background: var(--border-color); transform: translateY(-50%);"></div>
+                        <!-- Hash mark at middle (50%) -->
+                        <div class="virtue-hash-mark virtue-hash-middle" style="position: absolute; left: 50%; top: 50%; width: 2px; height: 15px; background: var(--text-amber); transform: translate(-50%, -50%);"></div>
+                        <!-- Hash mark at right (100%) -->
+                        <div class="virtue-hash-mark virtue-hash-right" style="position: absolute; right: 0; top: 50%; width: 2px; height: 12px; background: var(--border-color); transform: translateY(-50%);"></div>
+                        <!-- Range input for interaction (invisible) -->
                         <input type="range" 
                                id="virtue-${virtueId}" 
                                min="-100" 
@@ -1152,12 +1190,13 @@ ${safeContent}
                                value="${value}"
                                step="1"
                                oninput="UI.updateDebriefVirtue('${virtueId}', '${excessLabel}', '${virtueName}', '${deficiencyLabel}', this.value)"
-                               style="width: 100%; height: 6px; background: transparent; outline: none; cursor: pointer; z-index: 1; position: relative;"
+                               style="position: absolute; top: 50%; left: 0; right: 0; width: 100%; height: 20px; margin: 0; padding: 0; background: transparent; outline: none; cursor: pointer; z-index: 3; transform: translateY(-50%); opacity: 0;"
                                class="virtue-range-input">
-                        <div id="virtue-indicator-${virtueId}" style="position: absolute; left: ${visualPosition}%; transform: translateX(-50%); top: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: var(--text-amber); border: 2px solid var(--bg-dark); border-radius: 50%; pointer-events: none; z-index: 2;"></div>
+                        <!-- Knob indicator -->
+                        <div id="virtue-indicator-${virtueId}" class="virtue-knob" style="position: absolute; left: ${visualPosition}%; top: 50%; width: 20px; height: 20px; background: var(--text-amber); border: 2px solid var(--bg-dark); border-radius: 50%; pointer-events: none; z-index: 4; transform: translate(-50%, -50%);"></div>
                     </div>
                     <div id="virtue-label-${virtueId}" style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
-                        Current position: ${value > 0 ? '+' : ''}${value} (${positionLabel})
+                        ${value > 0 ? '+' : ''}${value} (${positionLabel})
                     </div>
                 </div>
             </div>
@@ -1192,7 +1231,7 @@ ${safeContent}
             } else if (numValue > 33) {
                 positionLabel = deficiencyLabel;
             }
-            label.textContent = `Current position: ${numValue > 0 ? '+' : ''}${numValue} (${positionLabel})`;
+            label.textContent = `${numValue > 0 ? '+' : ''}${numValue} (${positionLabel})`;
         }
     },
 
