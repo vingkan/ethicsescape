@@ -322,6 +322,7 @@ p {
 
 /* Clue Viewer */
 #clue-viewer {
+    display: none;
     background: var(--bg-panel);
     border: 2px solid var(--border-color);
     padding: 2rem;
@@ -333,11 +334,40 @@ p {
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 1rem;
     margin-bottom: 1.5rem;
+    position: relative;
 }
 
 .clue-header h2 {
     color: var(--text-amber);
     font-size: 1.5rem;
+}
+
+.clue-close-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.clue-close-button:hover {
+    color: var(--text-amber);
+    transform: scale(1.1);
+}
+
+.clue-close-button:active {
+    transform: scale(0.95);
 }
 
 .clue-content {

@@ -10,7 +10,7 @@ const discoveryLocations = [
     {
         id: 'briefing',
         icon: '📋',
-        label: 'Mission Briefing',
+        label: 'Situation Briefing',
         clueId: 'briefing',
         type: 'document'
     },
@@ -31,7 +31,7 @@ const discoveryLocations = [
     },
     {
         id: 'secure-pager',
-        icon: '📱',
+        icon: '📟',
         label: 'Secure Pager',
         clueId: 'advisor',
         type: 'code',
@@ -39,7 +39,7 @@ const discoveryLocations = [
     },
     {
         id: 'bentham-worksheet',
-        icon: '📊',
+        icon: '⚖️',
         label: 'Bentham Scales',
         clueId: 'bentham-scales',
         type: 'puzzle', // Always accessible, not code-locked
@@ -355,10 +355,18 @@ async function handleDiscoveryClick(location) {
             // Locked - show code input
             if (location.clueId === 'advisor') {
                 const viewer = document.getElementById('clue-viewer');
+                const discoveryGrid = document.getElementById('discovery-grid');
+                
+                // Hide discovery grid when showing code input
+                if (discoveryGrid) {
+                    discoveryGrid.style.display = 'none';
+                }
+                
                 if (viewer) {
                     viewer.innerHTML = `
                         <div class="clue-header">
                             <h2>Secure Pager Connection</h2>
+                            <button class="clue-close-button" onclick="UI.closeClueViewer()" aria-label="Close">×</button>
                         </div>
                         <div class="code-input-container">
                             <p>Establish secure connection to receive advisor transmission.</p>
@@ -367,6 +375,8 @@ async function handleDiscoveryClick(location) {
                             <p id="code-error" class="error-message" style="display:none;"></p>
                         </div>
                     `;
+                    
+                    viewer.style.display = 'block';
                     
                     const input = document.getElementById('code-input');
                     if (input) {

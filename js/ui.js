@@ -100,6 +100,12 @@ const UI = {
         const clue = ClueSystem.getClue(clueId);
         if (!clue) return;
         
+        // Hide discovery grid when showing a clue
+        const discoveryGrid = document.getElementById('discovery-grid');
+        if (discoveryGrid) {
+            discoveryGrid.style.display = 'none';
+        }
+
         // Render content
         if (content) {
             // Extract title and body from content
@@ -126,6 +132,7 @@ const UI = {
             viewer.innerHTML = `
                 <div class="clue-header">
                     <h2>${title}</h2>
+                    <button class="clue-close-button" onclick="UI.closeClueViewer()" aria-label="Close">×</button>
                 </div>
                 <div class="clue-content">
                     ${this.renderMarkdown(body)}
@@ -135,12 +142,15 @@ const UI = {
             viewer.innerHTML = `
                 <div class="clue-header">
                     <h2>${clue.name}</h2>
+                    <button class="clue-close-button" onclick="UI.closeClueViewer()" aria-label="Close">×</button>
                 </div>
                 <div class="clue-content">
                     <p>Loading...</p>
                 </div>
             `;
         }
+
+        viewer.style.display = 'block';
         
         // Mark as viewed
         GameState.viewClue(clueId);
@@ -152,9 +162,16 @@ const UI = {
         
         const clue = ClueSystem.getClue(clueId);
         
+        // Hide discovery grid when showing code input
+        const discoveryGrid = document.getElementById('discovery-grid');
+        if (discoveryGrid) {
+            discoveryGrid.style.display = 'none';
+        }
+        
         viewer.innerHTML = `
             <div class="clue-header">
                 <h2>${clue.name}</h2>
+                <button class="clue-close-button" onclick="UI.closeClueViewer()" aria-label="Close">×</button>
             </div>
             <div class="code-input-container">
                 <p>Enter the code to unlock this document:</p>
@@ -163,6 +180,8 @@ const UI = {
                 <p id="code-error" class="error-message" style="display:none;"></p>
             </div>
         `;
+        
+        viewer.style.display = 'block';
         
         // Focus input and allow Enter key
         const input = document.getElementById('code-input');
@@ -258,14 +277,36 @@ const UI = {
         if (!viewer) return;
         
         const clue = ClueSystem.getClue(clueId);
+        
+        // Hide discovery grid when showing a puzzle
+        const discoveryGrid = document.getElementById('discovery-grid');
+        if (discoveryGrid) {
+            discoveryGrid.style.display = 'none';
+        }
+        
         viewer.innerHTML = `
             <div class="clue-header">
                 <h2>${clue.name}</h2>
+                <button class="clue-close-button" onclick="UI.closeClueViewer()" aria-label="Close">×</button>
             </div>
             <div class="puzzle-container">
                 ${puzzleHTML}
             </div>
         `;
+        viewer.style.display = 'block';
+    },
+
+    closeClueViewer() {
+        const viewer = document.getElementById('clue-viewer');
+        const discoveryGrid = document.getElementById('discovery-grid');
+        
+        // Show discovery grid again
+        if (discoveryGrid) {
+            discoveryGrid.style.display = 'grid';
+        }
+
+        viewer.style.display = 'none';
+        window.scrollTo(0, 0);
     },
 
     showFormSelection(forms) {
@@ -767,7 +808,7 @@ const UI = {
     },
     
     returnToMainGame() {
-        // Show discovery grid and clue viewer
+        // Show discovery grid and hide clue viewer
         const discoveryGrid = document.getElementById('discovery-grid');
         const clueViewer = document.getElementById('clue-viewer');
         const formSelectionView = document.getElementById('form-selection-view');
@@ -775,7 +816,7 @@ const UI = {
         const placeholder = document.getElementById('button-placeholder');
         
         if (discoveryGrid) discoveryGrid.style.display = 'grid';
-        if (clueViewer) clueViewer.style.display = 'block';
+        if (clueViewer) clueViewer.style.display = 'none';
         if (formSelectionView) formSelectionView.style.display = 'none';
         
         // Update post-it note visibility and opacity

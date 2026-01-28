@@ -447,18 +447,34 @@ test.describe('Clue Counter', () => {
 
     // Click on form A (should unlock it)
     await page.click('#discovery-manila-folder-a');
+    
+    // Wait for clue viewer to appear and close it
+    await page.waitForSelector('#clue-viewer', { state: 'visible' });
+    await page.waitForSelector('.clue-close-button', { state: 'visible' });
+    await page.click('.clue-close-button');
+    
+    // Wait for discovery grid to be visible again
+    await page.waitForSelector('#discovery-grid', { state: 'visible' });
     await page.waitForTimeout(500); // Wait for update
 
-    // Check count after unlocking briefing
+    // Check count after unlocking form A
     clueCount = await getClueCount(page);
     expect(clueCount.unlocked).toBe(1);
     expect(clueCount.total).toBe(12);
 
     // Click on form B (should unlock it)
     await page.click('#discovery-briefcase-b');
+    
+    // Wait for clue viewer to appear and close it
+    await page.waitForSelector('#clue-viewer', { state: 'visible' });
+    await page.waitForSelector('.clue-close-button', { state: 'visible' });
+    await page.click('.clue-close-button');
+    
+    // Wait for discovery grid to be visible again
+    await page.waitForSelector('#discovery-grid', { state: 'visible' });
     await page.waitForTimeout(500); // Wait for update
 
-    // Check count after unlocking mdos-chart
+    // Check count after unlocking form B
     clueCount = await getClueCount(page);
     expect(clueCount.unlocked).toBe(2);
     expect(clueCount.total).toBe(12);
