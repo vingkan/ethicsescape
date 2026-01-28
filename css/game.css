@@ -496,6 +496,13 @@ p {
     box-shadow: 0 0 10px rgba(255, 184, 77, 0.4);
 }
 
+.historical-records-puzzle ul,
+.historical-records-puzzle ol,
+.dirty-harry-puzzle ol,
+.dirty-harry-puzzle ul {
+    margin-left: 2em;
+}
+
 .matching-puzzle {
     display: grid;
     grid-template-columns: 1fr 1fr;

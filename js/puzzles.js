@@ -75,11 +75,12 @@ const Puzzles = {
         if (hasAdvisor) {
             // Load advisor content to show for reference
             const advisorContent = await ClueSystem.loadClueContent('advisor');
+            const withoutFirstLine = advisorContent.split('\n').slice(1).join('\n');
             advisorContentHTML = `
                 <div style="background: var(--bg-darker); border-left: 4px solid var(--text-amber); padding: 1rem; margin: 1rem 0;">
-                    <h3 style="color: var(--text-amber); margin-top: 0;">Advisor Assessment (Reference)</h3>
+                    <h3 style="color: var(--text-amber); margin-top: 0;">Advisor Assessment</h3>
                     <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                        ${UI.renderMarkdown(advisorContent)}
+                        ${UI.renderMarkdown(withoutFirstLine)}
                     </div>
                 </div>
             `;

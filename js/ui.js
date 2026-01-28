@@ -102,12 +102,28 @@ const UI = {
         
         // Render content
         if (content) {
+            // Extract title and body from content
+            let trimmedContent = content.trim();
+            let lines = trimmedContent.split('\n');
+            let firstLine = lines[0] ? lines[0].trim() : '';
+            let title = '';
+            let body = '';
+
+            if (firstLine.startsWith('# ')) {
+                title = firstLine.substring(2).trim();
+                // Reconstruct the body (everything after the first line)
+                body = lines.slice(1).join('\n').trim();
+            } else {
+                title = clue.name;
+                body = trimmedContent;
+            }
+
             viewer.innerHTML = `
                 <div class="clue-header">
-                    <h2>${clue.name}</h2>
+                    <h2>${title}</h2>
                 </div>
                 <div class="clue-content">
-                    ${this.renderMarkdown(content)}
+                    ${this.renderMarkdown(body)}
                 </div>
             `;
         } else {

@@ -377,7 +377,6 @@ async function handleDiscoveryClick(location) {
 function showMDOSChart() {
     const html = `
         <div class="mdos-chart-container">
-            <h2>MDOS Decision Matrix</h2>
             <p>The following questions introduce dimensions of the ethical debate:</p>
             <div class="mdos-chart">
                 <!-- Row 1: Questions -->
@@ -413,9 +412,6 @@ function showMDOSChart() {
                     <div class="mdos-answer-clue">Dirty Harry</div>
                 </div>
             </div>
-            <p style="margin-top: 1rem; color: var(--text-secondary);">
-                These questions hint at the existence of clues that relate to each question.
-            </p>
             ${GameState.hasClueAccess('shue-post-it') ? `
             <div class="postit-note" id="shue-postit" style="opacity: ${GameState.getViewedClues().includes('shue-post-it') ? '1.0' : '0.75'}; cursor: ${GameState.getViewedClues().includes('shue-post-it') ? 'default' : 'pointer'};">
                 <div class="postit-content">
