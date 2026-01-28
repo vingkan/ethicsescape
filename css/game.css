@@ -580,8 +580,10 @@ p {
 
 .historical-records-puzzle ul,
 .historical-records-puzzle ol,
+.dirty-harry-puzzle ul,
 .dirty-harry-puzzle ol,
-.dirty-harry-puzzle ul {
+.outcome ul,
+.outcome ol {
     margin-left: 2em;
 }
 
