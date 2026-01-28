@@ -922,6 +922,8 @@ p {
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     margin: 2rem 0;
+    overflow-x: auto;
+    overflow-y: visible;
 }
 
 .chart-cell {
@@ -951,7 +953,6 @@ p {
 
 .mdos-chart-container #shue-postit {
     top: auto;
-    bottom: -7.5rem;
     left: 0.75rem;
     right: auto;
 }
@@ -1030,6 +1031,12 @@ p {
     font-size: 0.85rem;
     line-height: 1.4;
     z-index: 10;
+    cursor: grab;
+    user-select: none;
+}
+
+.postit-note:active {
+    cursor: grabbing;
 }
 
 #shue-postit {

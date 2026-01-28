@@ -97,25 +97,193 @@ const discoveryLocations = [
 
 let timerInterval = null;
 
+// Drag state for post-it notes
+let dragState = {
+    isDragging: false,
+    element: null,
+    startX: 0,
+    startY: 0,
+    initialLeft: 0,
+    initialTop: 0,
+    hasMoved: false,
+    wasDrag: false // Track if the last interaction was a drag
+};
+
+/**
+ * Discover a clue from a post-it note (unlock and view)
+ * This function handles the clue discovery logic shared between click and drag interactions
+ */
+function discoverPostItClue(element, clueId) {
+    if (!element || !clueId) return;
+    
+    // Check if clue has already been viewed
+    const viewedClues = GameState.getViewedClues();
+    if (viewedClues.includes(clueId)) {
+        return; // Already discovered
+    }
+    
+    // Unlock and view the clue
+    GameState.unlockClue(clueId);
+    GameState.viewClue(clueId);
+    
+    // Update element appearance
+    element.style.opacity = '1.0';
+    element.style.cursor = 'grab';
+    
+    // Update clue count
+    UI.updateClueCount();
+    
+    // Remove click handler since discovery already happened
+    element.onclick = null;
+}
+
+/**
+ * Initialize drag functionality for a post-it note element
+ */
+function initPostItDrag(element) {
+    if (!element) return;
+    
+    // Skip if already initialized (check for existing listener)
+    if (element.dataset.dragInitialized === 'true') return;
+    element.dataset.dragInitialized = 'true';
+    
+    // Convert right positioning to left if needed (only once)
+    const computedStyle = window.getComputedStyle(element);
+    
+    // If element uses 'right' positioning, convert to 'left' for easier drag calculations
+    if (computedStyle.right !== 'auto' && computedStyle.left === 'auto') {
+        const rect = element.getBoundingClientRect();
+        const parentRect = element.parentElement.getBoundingClientRect();
+        const right = parseFloat(computedStyle.right);
+        // Calculate left position relative to parent
+        const left = parentRect.width - rect.width - right;
+        element.style.right = 'auto';
+        element.style.left = left + 'px';
+    }
+    
+    element.addEventListener('mousedown', handlePostItMouseDown);
+    element.style.cursor = 'grab';
+}
+
+/**
+ * Handle mousedown event on post-it note
+ */
+function handlePostItMouseDown(e) {
+    const element = e.currentTarget;
+    const rect = element.getBoundingClientRect();
+    const parentRect = element.parentElement.getBoundingClientRect();
+    
+    dragState.isDragging = true;
+    dragState.element = element;
+    dragState.startX = e.clientX;
+    dragState.startY = e.clientY;
+    dragState.hasMoved = false;
+    dragState.wasDrag = false;
+    
+    // Get current position
+    const computedStyle = window.getComputedStyle(element);
+    dragState.initialLeft = parseFloat(computedStyle.left) || 0;
+    dragState.initialTop = parseFloat(computedStyle.top) || 0;
+    
+    element.style.cursor = 'grabbing';
+    element.style.zIndex = '1000'; // Bring to front while dragging
+    
+    // Add global event listeners
+    document.addEventListener('mousemove', handlePostItMouseMove);
+    document.addEventListener('mouseup', handlePostItMouseUp);
+    
+    e.preventDefault();
+}
+
+/**
+ * Handle mousemove event during drag
+ */
+function handlePostItMouseMove(e) {
+    if (!dragState.isDragging || !dragState.element) return;
+    
+    const deltaX = e.clientX - dragState.startX;
+    const deltaY = e.clientY - dragState.startY;
+    
+    // Check if mouse has moved significantly (threshold: 5px)
+    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        dragState.hasMoved = true;
+    }
+    
+    // Update element position
+    const newLeft = dragState.initialLeft + deltaX;
+    const newTop = dragState.initialTop + deltaY;
+    
+    dragState.element.style.left = newLeft + 'px';
+    dragState.element.style.top = newTop + 'px';
+    
+    e.preventDefault();
+}
+
+/**
+ * Handle mouseup event to end drag
+ */
+function handlePostItMouseUp(e) {
+    if (!dragState.isDragging || !dragState.element) return;
+    
+    const element = dragState.element;
+    const wasDrag = dragState.hasMoved;
+    
+    // Mark if this was a drag
+    dragState.wasDrag = wasDrag;
+    
+    // If this was a drag, trigger clue discovery
+    if (wasDrag) {
+        const clueId = element.dataset.clueId;
+        if (clueId) {
+            // Check if clue hasn't been viewed yet
+            const viewedClues = GameState.getViewedClues();
+            if (!viewedClues.includes(clueId)) {
+                discoverPostItClue(element, clueId);
+            }
+        }
+    }
+    
+    // Reset drag state
+    dragState.isDragging = false;
+    dragState.element = null;
+    
+    // Restore cursor
+    element.style.cursor = 'grab';
+    element.style.zIndex = '10'; // Restore original z-index
+    
+    // Remove global event listeners
+    document.removeEventListener('mousemove', handlePostItMouseMove);
+    document.removeEventListener('mouseup', handlePostItMouseUp);
+    
+    // Reset wasDrag after a short delay to allow click handler to check it
+    setTimeout(() => {
+        dragState.wasDrag = false;
+        dragState.hasMoved = false;
+    }, 50);
+}
+
 function updatePostItVisibility() {
     // Update secure-pager-code post-it visibility
     const pagerPostit = document.getElementById('pager-postit');
     if (pagerPostit) {
+        // Store clue ID as data attribute
+        pagerPostit.dataset.clueId = 'secure-pager-code';
+        
         if (GameState.hasClueAccess('secure-pager-code')) {
             pagerPostit.style.display = '';
+            // Initialize drag functionality
+            initPostItDrag(pagerPostit);
             // Set initial opacity to 0.75 if not viewed yet
             const viewedClues = GameState.getViewedClues();
             if (!viewedClues.includes('secure-pager-code')) {
                 pagerPostit.style.opacity = '0.75';
-                pagerPostit.style.cursor = 'pointer';
+                pagerPostit.style.cursor = 'grab';
                 // Add click handler
-                pagerPostit.onclick = function() {
-                    GameState.unlockClue('secure-pager-code');
-                    GameState.viewClue('secure-pager-code');
-                    pagerPostit.style.opacity = '1.0';
-                    pagerPostit.style.cursor = 'default';
-                    UI.updateClueCount();
-                    pagerPostit.onclick = null; // Remove handler after first click
+                pagerPostit.onclick = function(e) {
+                    // Only handle click if it wasn't a drag
+                    if (!dragState.wasDrag) {
+                        discoverPostItClue(pagerPostit, 'secure-pager-code');
+                    }
                 };
             } else {
                 pagerPostit.style.opacity = '1.0';
@@ -128,21 +296,24 @@ function updatePostItVisibility() {
     // Update shue-post-it visibility (in MDOS chart if it's shown)
     const shuePostit = document.getElementById('shue-postit');
     if (shuePostit) {
+        // Store clue ID as data attribute
+        shuePostit.dataset.clueId = 'shue-post-it';
+        
         if (GameState.hasClueAccess('shue-post-it')) {
             shuePostit.style.display = '';
+            // Initialize drag functionality
+            initPostItDrag(shuePostit);
             // Set initial opacity to 0.75 if not viewed yet
             const viewedClues = GameState.getViewedClues();
             if (!viewedClues.includes('shue-post-it')) {
                 shuePostit.style.opacity = '0.75';
-                shuePostit.style.cursor = 'pointer';
+                shuePostit.style.cursor = 'grab';
                 // Add click handler
-                shuePostit.onclick = function() {
-                    GameState.unlockClue('shue-post-it');
-                    GameState.viewClue('shue-post-it');
-                    shuePostit.style.opacity = '1.0';
-                    shuePostit.style.cursor = 'default';
-                    UI.updateClueCount();
-                    shuePostit.onclick = null; // Remove handler after first click
+                shuePostit.onclick = function(e) {
+                    // Only handle click if it wasn't a drag
+                    if (!dragState.wasDrag) {
+                        discoverPostItClue(shuePostit, 'shue-post-it');
+                    }
                 };
             } else {
                 shuePostit.style.opacity = '1.0';
@@ -462,7 +633,7 @@ function showMDOSChart() {
                 </div>
             </div>
             ${GameState.hasClueAccess('shue-post-it') ? `
-            <div class="postit-note" id="shue-postit" style="opacity: ${GameState.getViewedClues().includes('shue-post-it') ? '1.0' : '0.75'}; cursor: ${GameState.getViewedClues().includes('shue-post-it') ? 'default' : 'pointer'};">
+            <div class="postit-note" id="shue-postit" data-clue-id="shue-post-it" style="opacity: ${GameState.getViewedClues().includes('shue-post-it') ? '1.0' : '0.75'}; cursor: ${GameState.getViewedClues().includes('shue-post-it') ? 'default' : 'pointer'};">
                 <div class="postit-content">
                     <strong>Note:</strong> Check the file cabinet for a paper by Henry Shue. The document is from 1978.
                 </div>
@@ -477,18 +648,25 @@ function showMDOSChart() {
     // Refresh discovery locations to show checkmark
     setupDiscoveryLocations();
     
-    // Set up click handler for shue-post-it if it exists and hasn't been viewed
+    // Set up click handler and drag functionality for shue-post-it if it exists
     setTimeout(() => {
         const shuePostit = document.getElementById('shue-postit');
-        if (shuePostit && !GameState.getViewedClues().includes('shue-post-it')) {
-            shuePostit.onclick = function() {
-                GameState.unlockClue('shue-post-it');
-                GameState.viewClue('shue-post-it');
-                shuePostit.style.opacity = '1.0';
-                shuePostit.style.cursor = 'default';
-                UI.updateClueCount();
-                shuePostit.onclick = null; // Remove handler after first click
-            };
+        if (shuePostit) {
+            // Ensure clue ID is stored (in case it wasn't in the HTML template)
+            shuePostit.dataset.clueId = 'shue-post-it';
+            
+            // Initialize drag functionality
+            initPostItDrag(shuePostit);
+            
+            // Set up click handler if not viewed yet
+            if (!GameState.getViewedClues().includes('shue-post-it')) {
+                shuePostit.onclick = function(e) {
+                    // Only handle click if it wasn't a drag
+                    if (!dragState.wasDrag) {
+                        discoverPostItClue(shuePostit, 'shue-post-it');
+                    }
+                };
+            }
         }
     }, 100);
 }
