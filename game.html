@@ -16,7 +16,7 @@
         <div class="timer-container">
             <div id="timer-display">60:00</div>
             <div class="clue-count">Clues: <span id="clue-count">0 / 0</span></div>
-            <button id="reset-game-btn" class="reset-button" onclick="UI.showResetConfirmation()">Reset Game</button>
+            <div id="player-badge" class="player-badge"></div>
         </div>
     </div>
 
@@ -62,12 +62,14 @@
                 <!-- Custom form builder will be displayed here -->
             </div>
 
-            <!-- Manual Submit Button -->
-            <div style="text-align: center; margin: 2rem 0;">
-                <button onclick="showFormSelection()" id="submit-form-btn"
-                    style="display: none; padding: 1rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: pointer; text-transform: uppercase;">
-                    Submit Authorization Form
+            <!-- Button Container -->
+            <div class="button-container">
+                <button id="reset-game-btn" class="reset-button" onclick="UI.showResetConfirmation()">Reset
+                    Game</button>
+                <button onclick="showFormSelection()" id="submit-form-btn" class="submit-button" style="display: none;">
+                    Select Authorization Form
                 </button>
+                <div id="button-placeholder" class="button-placeholder" style="display: none;"></div>
             </div>
         </div>
     </div>

@@ -424,9 +424,11 @@ const UI = {
         `;
         formSelectionView.style.display = 'block';
         
-        // Hide manual submit button
+        // Hide manual submit button and placeholder (form selection view handles its own buttons)
         const submitBtn = document.getElementById('submit-form-btn');
+        const placeholder = document.getElementById('button-placeholder');
         if (submitBtn) submitBtn.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'none';
         
         // Scroll to top
         window.scrollTo(0, 0);
@@ -766,6 +768,7 @@ const UI = {
         const clueViewer = document.getElementById('clue-viewer');
         const formSelectionView = document.getElementById('form-selection-view');
         const submitBtn = document.getElementById('submit-form-btn');
+        const placeholder = document.getElementById('button-placeholder');
         
         if (discoveryGrid) discoveryGrid.style.display = 'grid';
         if (clueViewer) clueViewer.style.display = 'block';
@@ -776,11 +779,20 @@ const UI = {
             updatePostItVisibility();
         }
         
-        // Show manual submit button with appropriate label
-        if (submitBtn) {
-            const gameCompleted = GameState.isGameCompleted();
-            submitBtn.style.display = 'block';
-            submitBtn.textContent = gameCompleted ? 'View Results' : 'Submit Authorization Form';
+        // Show manual submit button with appropriate label (only for first player)
+        const currentPlayerIndex = GameState.getCurrentPlayerIndex();
+        const isFirstPlayer = currentPlayerIndex === 0;
+        
+        if (isFirstPlayer) {
+            if (submitBtn) {
+                const gameCompleted = GameState.isGameCompleted();
+                submitBtn.style.display = 'block';
+                submitBtn.textContent = gameCompleted ? 'View Results' : 'Select Authorization Form';
+            }
+            if (placeholder) placeholder.style.display = 'none';
+        } else {
+            if (submitBtn) submitBtn.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
         }
     },
 

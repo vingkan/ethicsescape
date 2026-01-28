@@ -126,7 +126,7 @@ test.describe('Form Selection Access Control', () => {
     const submitButton1 = page1.locator('#submit-form-btn');
     await expect(submitButton1).toBeVisible();
     const buttonText1 = await submitButton1.textContent();
-    expect(buttonText1).toContain('Submit Authorization Form');
+    expect(buttonText1).toContain('Select Authorization Form');
 
     // Player 2 should NOT see the submit button
     const submitButton2 = page2.locator('#submit-form-btn');

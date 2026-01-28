@@ -153,6 +153,37 @@ function updatePostItVisibility() {
     }
 }
 
+function updatePlayerBadge() {
+    const playerBadge = document.getElementById('player-badge');
+    if (!playerBadge) return;
+    
+    const team = GameState.getTeam();
+    const currentPlayerIndex = GameState.getCurrentPlayerIndex();
+    
+    // Default to single player if no team data
+    if (team.size === 0 || !team.members || team.members.length === 0) {
+        playerBadge.innerHTML = `
+            <span class="player-icon">♥</span>
+            <span class="player-name">Heart</span>
+        `;
+        return;
+    }
+    
+    // Ensure player index is valid
+    if (currentPlayerIndex < 0 || currentPlayerIndex >= team.members.length) {
+        playerBadge.innerHTML = '';
+        return;
+    }
+    
+    const codeName = team.members[currentPlayerIndex];
+    const icon = CODE_NAME_ICONS[currentPlayerIndex];
+    
+    playerBadge.innerHTML = `
+        <span class="player-icon">${icon}</span>
+        <span class="player-name">${codeName}</span>
+    `;
+}
+
 async function initGame() {
     // Check if game should be initialized or resumed
     const wasInProgress = GameState.init();
@@ -164,6 +195,9 @@ async function initGame() {
     
     // Initialize UI
     UI.updateClueCount();
+    
+    // Update player badge
+    updatePlayerBadge();
     
     // Start timer
     startTimer();
@@ -182,21 +216,30 @@ async function initGame() {
     const currentPlayerIndex = GameState.getCurrentPlayerIndex();
     const isFirstPlayer = currentPlayerIndex === 0;
     
+    const submitBtn = document.getElementById('submit-form-btn');
+    const placeholder = document.getElementById('button-placeholder');
+    
     if (GameState.isGameCompleted()) {
         // Completed game: allow first player to go directly to the form selection
         if (isFirstPlayer) {
             showFormSelection();
+            if (submitBtn) submitBtn.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'none';
+        } else {
+            if (submitBtn) submitBtn.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
         }
     } else {
         // In-progress game: show submit button only to first player
-        const submitBtn = document.getElementById('submit-form-btn');
-        if (submitBtn) {
-            if (isFirstPlayer) {
+        if (isFirstPlayer) {
+            if (submitBtn) {
                 submitBtn.style.display = 'block';
-                submitBtn.textContent = 'Submit Authorization Form';
-            } else {
-                submitBtn.style.display = 'none';
+                submitBtn.textContent = 'Select Authorization Form';
             }
+            if (placeholder) placeholder.style.display = 'none';
+        } else {
+            if (submitBtn) submitBtn.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
         }
     }
 }

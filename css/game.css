@@ -163,12 +163,59 @@ p {
     text-transform: uppercase;
     letter-spacing: 1px;
     transition: all 0.2s;
-    margin-left: 1rem;
 }
 
 .reset-button:hover {
     background: var(--text-red);
     color: var(--bg-dark);
+}
+
+.player-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-red);
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+}
+
+.player-badge .player-icon {
+    font-size: 1.2rem;
+}
+
+.player-badge .player-name {
+    font-weight: bold;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 2rem 0;
+    width: 100%;
+}
+
+.submit-button {
+    background: var(--accent-green);
+    border: none;
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+}
+
+.submit-button:hover {
+    background: var(--accent-green-light);
+    color: var(--bg-dark);
+}
+
+.button-placeholder {
+    padding: 0.5rem 1rem;
+    visibility: hidden;
 }
 
 /* Main Layout */
