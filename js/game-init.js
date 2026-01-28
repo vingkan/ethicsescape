@@ -40,7 +40,7 @@ const discoveryLocations = [
     {
         id: 'bentham-worksheet',
         icon: '📊',
-        label: 'Bentham\'s Scales Worksheet',
+        label: 'Bentham\'s Scales',
         clueId: 'bentham-scales',
         type: 'puzzle', // Always accessible, not code-locked
         description: 'Quantify the threat assessment'
@@ -253,7 +253,6 @@ function setupDiscoveryLocations() {
         item.innerHTML = `
             <div class="discovery-icon">${location.icon}</div>
             <div class="discovery-label">${location.label}</div>
-            ${location.description ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">${location.description}</div>` : ''}
         `;
         
         item.addEventListener('click', () => handleDiscoveryClick(location));

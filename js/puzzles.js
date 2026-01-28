@@ -84,24 +84,12 @@ const Puzzles = {
                     </div>
                 </div>
             `;
-        } else {
-            // Show message that advisor assessment is needed
-            advisorContentHTML = `
-                <div style="background: var(--bg-darker); border-left: 4px solid var(--warning); padding: 1rem; margin: 1rem 0;">
-                    <p style="color: var(--text-secondary); margin: 0;">
-                        <strong>Note:</strong> You need to receive the advisor's assessment first before you can complete this worksheet. 
-                        Look for the Secure Pager to establish a connection and receive the advisor's transmission. 
-                        Once you have the advisor's assessment, you can use it to quantify the threat on the scales below.
-                    </p>
-                </div>
-            `;
         }
         
         const html = `
             <div class="bentham-puzzle">
                 <p class="bentham-intro">
-                    Use the calibrated scales below to quantify the advisor's assessment of the bomb threat according to its
-                    perceived intensity, duration, certainty, and nearness.
+                    Contact the advisor via secure transmission, then use these scales to quantify their assessment.
                 </p>
                 
                 ${advisorContentHTML}

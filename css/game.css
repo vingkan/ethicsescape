@@ -467,6 +467,7 @@ p {
     gap: 0.35rem;
     margin-top: 0.5rem;
     font-size: 0.7rem;
+    overflow-x: auto;
 }
 
 .bentham-scale-label {
