@@ -205,18 +205,24 @@ function handlePostItMouseMove(e) {
     const deltaY = e.clientY - dragState.startY;
     
     // Check if mouse has moved significantly (threshold: 5px)
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+    const hasMovedSignificantly = Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5;
+    if (hasMovedSignificantly) {
         dragState.hasMoved = true;
     }
     
-    // Update element position
-    const newLeft = dragState.initialLeft + deltaX;
-    const newTop = dragState.initialTop + deltaY;
-    
-    dragState.element.style.left = newLeft + 'px';
-    dragState.element.style.top = newTop + 'px';
-    
-    e.preventDefault();
+    // Only prevent default and update position if we're actually dragging
+    // This allows normal scroll behavior when not dragging
+    if (dragState.hasMoved) {
+        // Update element position
+        const newLeft = dragState.initialLeft + deltaX;
+        const newTop = dragState.initialTop + deltaY;
+        
+        dragState.element.style.left = newLeft + 'px';
+        dragState.element.style.top = newTop + 'px';
+        
+        // Only prevent default when actively dragging to allow scrolling when not dragging
+        e.preventDefault();
+    }
 }
 
 /**
@@ -226,6 +232,28 @@ function handlePostItMouseUp(e) {
     if (!dragState.isDragging || !dragState.element) return;
     
     const element = dragState.element;
+    
+    // Check if the mouseup event is actually related to the post-it element
+    // If the mouseup occurs on a different element (like a Steinhoff definition),
+    // exit early to avoid interfering with other click handlers
+    const target = e.target;
+    if (target && element !== target && !element.contains(target)) {
+        // Mouseup occurred on a different element - clean up listeners but don't process drag
+        dragState.isDragging = false;
+        dragState.element = null;
+        dragState.wasDrag = false;
+        dragState.hasMoved = false;
+        
+        // Restore cursor
+        element.style.cursor = 'grab';
+        element.style.zIndex = '10';
+        
+        // Remove global event listeners
+        document.removeEventListener('mousemove', handlePostItMouseMove);
+        document.removeEventListener('mouseup', handlePostItMouseUp);
+        return;
+    }
+    
     const wasDrag = dragState.hasMoved;
     
     // Mark if this was a drag

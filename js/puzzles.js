@@ -455,6 +455,24 @@ const Puzzles = {
     },
 
     handleSteinhoffExampleClick(exampleNum) {
+        const exampleEl = document.querySelector(`.match-item.example[data-example="${exampleNum}"]`);
+        if (!exampleEl) return;
+
+        // Check if the clicked example is inside a definition drop zone
+        const dropZone = exampleEl.closest('.definition-drop-zone');
+        
+        // If inside a definition and another example is selected (different from clicked one)
+        if (dropZone && window.steinhoffSelectedExample && window.steinhoffSelectedExample !== exampleNum) {
+            const defName = dropZone.getAttribute('data-def');
+            if (defName) {
+                // Assign the selected example to this definition
+                // This will automatically return the clicked example to the examples list
+                this.assignSteinhoffExampleToDefinition(window.steinhoffSelectedExample, defName, dropZone);
+                return;
+            }
+        }
+
+        // Normal selection behavior
         const allExamples = document.querySelectorAll('.match-item.example');
         allExamples.forEach(el => el.classList.remove('selected'));
 
@@ -464,7 +482,6 @@ const Puzzles = {
         }
 
         window.steinhoffSelectedExample = exampleNum;
-        const exampleEl = document.querySelector(`.match-item.example[data-example="${exampleNum}"]`);
         if (exampleEl) {
             exampleEl.classList.add('selected');
         }

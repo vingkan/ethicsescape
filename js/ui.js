@@ -138,16 +138,6 @@ const UI = {
                     ${this.renderMarkdown(body)}
                 </div>
             `;
-        } else {
-            viewer.innerHTML = `
-                <div class="clue-header">
-                    <h2>${clue.name}</h2>
-                    <button class="clue-close-button" onclick="UI.closeClueViewer()" aria-label="Close">×</button>
-                </div>
-                <div class="clue-content">
-                    <p>Loading...</p>
-                </div>
-            `;
         }
 
         viewer.style.display = 'block';
