@@ -88,7 +88,7 @@
             border: none;
             color: var(--text-primary);
             font-size: 1.2rem;
-            font-family: 'Courier New', monospace;
+            font-family: var(--font-body);
             text-transform: uppercase;
             letter-spacing: 2px;
             cursor: pointer;
@@ -226,7 +226,7 @@
                 const icon = CODE_NAME_ICONS[i];
 
                 const tile = document.createElement('label');
-                tile.style.cssText = 'display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg-darker); border: 2px solid var(--border-color); cursor: pointer; transition: all 0.3s; font-family: "Courier New", monospace;';
+                tile.style.cssText = 'display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg-darker); border: 2px solid var(--border-color); cursor: pointer; transition: all 0.3s; font-family: var(--font-body);';
                 tile.onmouseover = function () {
                     if (!tile.querySelector('input').checked) {
                         this.style.borderColor = 'var(--text-amber)';
@@ -373,7 +373,7 @@
                 // Create radio tiles for team size (1-4 players)
                 for (let i = 1; i <= 4; i++) {
                     const tile = document.createElement('label');
-                    tile.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: var(--bg-darker); border: 2px solid var(--border-color); cursor: pointer; transition: all 0.3s; font-family: "Courier New", monospace; white-space: nowrap;';
+                    tile.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: var(--bg-darker); border: 2px solid var(--border-color); cursor: pointer; transition: all 0.3s; font-family: var(--font-body); white-space: nowrap;';
                     tile.onmouseover = function () {
                         if (!tile.querySelector('input').checked) {
                             this.style.borderColor = 'var(--text-amber)';

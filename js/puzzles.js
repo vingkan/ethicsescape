@@ -105,7 +105,7 @@ const Puzzles = {
                 ${this.renderBenthamScale('certainty')}
                 ${this.renderBenthamScale('nearness')}
                 
-                <button onclick="Puzzles.submitBenthamScales()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
+                <button onclick="Puzzles.submitBenthamScales()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: var(--font-body); cursor: pointer;">
                     Submit Assessment
                 </button>
                 <p id="bentham-error" class="error-message" style="display:none;"></p>
@@ -231,7 +231,7 @@ const Puzzles = {
                         </p>
                         <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
                             <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
-                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
                             <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
                                 Share this code with teammates who need to unlock the Steinhoff Definitions clue.
                             </p>
@@ -284,7 +284,7 @@ const Puzzles = {
                     </div>
                 </div>
                 
-                <button onclick="Puzzles.submitSteinhoffMatching()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
+                <button onclick="Puzzles.submitSteinhoffMatching()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: var(--font-body); cursor: pointer;">
                     Submit Matching
                 </button>
                 <p id="steinhoff-error" class="error-message" style="display:none;"></p>
@@ -540,7 +540,7 @@ const Puzzles = {
                         </p>
                         <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
                             <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
-                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
                             <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
                                 Share this code with teammates who need to unlock the Historical Records clue.
                             </p>
@@ -580,7 +580,7 @@ const Puzzles = {
                     ${this.renderRecords(recordsText)}
                 </div>
                 
-                <button onclick="Puzzles.submitHistoricalRecords()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
+                <button onclick="Puzzles.submitHistoricalRecords()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: var(--font-body); cursor: pointer;">
                     Submit Classification
                 </button>
                 <p id="records-error" class="error-message" style="display:none;"></p>
@@ -678,7 +678,7 @@ const Puzzles = {
                         </p>
                         <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
                             <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
-                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
                             <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
                                 Share this code with teammates who need to unlock the Intervening Action clue.
                             </p>
@@ -718,7 +718,7 @@ const Puzzles = {
                     ${this.renderStatements(interveningText)}
                 </div>
                 
-                <button onclick="Puzzles.submitInterveningAction()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
+                <button onclick="Puzzles.submitInterveningAction()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: var(--font-body); cursor: pointer;">
                     Submit Selection
                 </button>
                 <p id="intervening-error" class="error-message" style="display:none;"></p>
@@ -797,7 +797,7 @@ const Puzzles = {
                         </p>
                         <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
                             <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
-                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
                             <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
                                 Share this code with teammates who need to unlock the AFF Pamphlet clue.
                             </p>
@@ -830,15 +830,15 @@ const Puzzles = {
                 </ol>
                 <p>Write an imaginary story where such a scenario emerges based on your chosen authorization form.</p>
                 
-                <textarea id="dirty-harry-story" rows="10" style="width: 100%; background: var(--bg-darker); border: 2px solid var(--border-color); color: var(--text-primary); padding: 1rem; font-family: 'Courier New', monospace; margin: 1rem 0;"></textarea>
+                <textarea id="dirty-harry-story" rows="10" style="width: 100%; background: var(--bg-darker); border: 2px solid var(--border-color); color: var(--text-primary); padding: 1rem; font-family: var(--font-body); margin: 1rem 0;"></textarea>
                 
-                <button id="dirty-harry-submit-btn" onclick="Puzzles.submitDirtyHarry()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
+                <button id="dirty-harry-submit-btn" onclick="Puzzles.submitDirtyHarry()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: var(--font-body); cursor: pointer;">
                     Submit Story
                 </button>
                 <p id="dirty-harry-error" class="error-message" style="display:none;"></p>
                 <p id="dirty-harry-feedback" style="display:none; color: var(--text-amber); margin-top: 1rem;"></p>
                 <div id="dirty-harry-bypass-container" style="display:none; margin-top: 1rem;">
-                    <button onclick="Puzzles.acceptDirtyHarryAnyway()" style="padding: 0.75rem 2rem; background: var(--text-amber); border: none; color: var(--bg-darker); font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
+                    <button onclick="Puzzles.acceptDirtyHarryAnyway()" style="padding: 0.75rem 2rem; background: var(--text-amber); border: none; color: var(--bg-darker); font-family: var(--font-body); cursor: pointer; font-weight: bold;">
                         Accept Story Anyway
                     </button>
                     <p style="color: var(--text-secondary); margin-top: 1rem;">
@@ -925,9 +925,9 @@ const Puzzles = {
                         </p>
                         <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
                             <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
-                            <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                            <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
                             <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
-                                Share this code with teammates who need to unlock the Custom Authorization Form clue.
+                                This authorization code unlocks the Custom Authorization Form.
                             </p>
                         </div>
                     </div>
@@ -1016,9 +1016,9 @@ const Puzzles = {
                     </p>
                     <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
                         <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
-                        <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                        <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
                         <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
-                            Share this code with teammates who need to unlock the Custom Authorization Form clue.
+                            This authorization code unlocks the Custom Authorization Form.
                         </p>
                     </div>
                 </div>

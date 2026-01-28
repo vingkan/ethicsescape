@@ -118,6 +118,11 @@ const UI = {
                 body = trimmedContent;
             }
 
+            if (clueId === 'form-a' || clueId === 'form-b') {
+                const authorizationDate = this.getAuthorizationDate();
+                body = body.replace('August 3rd, 2019', authorizationDate);
+            }
+
             viewer.innerHTML = `
                 <div class="clue-header">
                     <h2>${title}</h2>
@@ -341,7 +346,7 @@ const UI = {
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Form Selection:</label>
                         <select id="form-select-${index}" 
-                                style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace;"
+                                style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body);"
                                 ${selectOnChange} ${selectDisabledAttr}>
                             <option value="">Select a form...</option>
                             <option value="form-a" ${selection.form === 'form-a' ? 'selected' : ''}>Form A: Enhanced Interrogation</option>
@@ -352,8 +357,8 @@ const UI = {
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${codeName} supports this option:</label>
                         <textarea id="form-reason-${index}" 
                                   rows="3" 
-                                  style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"
-                                  placeholder="Enter reason (at least 5 words)..."
+                                  style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body); resize: vertical;"
+                                  placeholder="Enter reason..."
                                   ${textareaOnChange} ${textareaReadonlyAttr}>${selection.reason}</textarea>
                         <p id="form-reason-error-${index}" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
                     </div>
@@ -368,7 +373,7 @@ const UI = {
         const customFormButton = customFormUnlocked ? `
             <div style="text-align: center; margin-bottom: 2rem;">
                 <button onclick="UI.showCustomFormBuilder()" 
-                        style="padding: 1rem 2rem; background: var(--text-amber); border: none; color: var(--bg-dark); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; font-weight: bold;">
+                        style="padding: 1rem 2rem; background: var(--text-amber); border: none; color: var(--bg-dark); font-family: var(--font-body); font-size: 1.1rem; cursor: pointer; text-transform: uppercase; font-weight: bold;">
                     Create Custom Authorization Form
                 </button>
             </div>
@@ -400,24 +405,24 @@ const UI = {
                 <button class="back-button" onclick="UI.returnToMainGame()">← Back to Investigation</button>
                 <h2>Team Authorization Form Selection</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                    For each team member, select which form they support and explain why. You must reach the acceptance threshold before submitting.
+                    For each team member, select which form they support and explain why.
                 </p>
-                <div style="background: var(--bg-darker); border-left: 4px solid var(--text-amber); padding: 1rem; margin-bottom: 1.5rem;">
-                    <p style="margin: 0; color: var(--text-primary);">
-                        <strong>Acceptance Status:</strong> ${acceptanceStatus.message}
-                    </p>
-                </div>
+                ${eireeMessage}
             </div>
-            ${eireeMessage}
             ${customFormButton}
             <div class="team-selection-container">
                 ${teamSlotsHTML}
+            </div>
+            <div style="background: var(--bg-darker); border-left: 4px solid var(--text-amber); padding: 1rem; margin-bottom: 1.5rem;">
+                <p style="margin: 0; color: var(--text-primary);">
+                    <strong>Acceptance Status:</strong> ${acceptanceStatus.message}
+                </p>
             </div>
             <div style="text-align: center; margin-top: 2rem;">
                 <button onclick="${buttonOnClick}" 
                         id="submit-team-form-btn"
                         ${buttonDisabledAttr}
-                        style="padding: 1rem 2rem; background: ${buttonBackground}; border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: ${buttonCursor}; text-transform: uppercase; opacity: ${buttonOpacity};">
+                        style="padding: 1rem 2rem; background: ${buttonBackground}; border: none; color: var(--text-primary); font-family: var(--font-body); font-size: 1.1rem; cursor: ${buttonCursor}; text-transform: uppercase; opacity: ${buttonOpacity};">
                     ${buttonLabel}
                 </button>
             </div>
@@ -476,10 +481,9 @@ const UI = {
         
         const errors = [];
         
-        // Check word count (at least 5 words)
         const wordCount = reason.trim().split(/\s+/).filter(w => w.length > 0).length;
         if (wordCount < 5) {
-            errors.push('Reason must be at least 5 words long.');
+            errors.push('Provide a stronger reason.');
         }
         
         // Check for duplicates
@@ -533,7 +537,7 @@ const UI = {
             }
         } else {
             const maxCount = Math.max(formACount, formBCount);
-            message = `Need ${threshold} players to agree. Currently: ${maxCount}/${team.size} players agree on one form.`;
+            message = `Need ${threshold} players to agree. Currently: ${maxCount}/${team.size} players agree.`;
         }
         
         return {
@@ -683,13 +687,13 @@ const UI = {
 
     showAuthorizationCodeModal() {
         const modalContent = `
-            <p style="margin-bottom: 1rem;">Enter the authorization code to unlock the Custom Authorization Form.</p>
+            <p style="margin-bottom: 1rem;">Requires clearance level 9 or higher.</p>
             <input type="text" 
                    id="auth-code-input" 
                    placeholder="Enter code" 
                    autocomplete="off"
                    maxlength="10"
-                   style="width: 100%; padding: 0.75rem; margin: 1rem 0; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; letter-spacing: 0.2rem;">
+                   style="width: 100%; padding: 0.75rem; margin: 1rem 0; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body); font-size: 1.1rem; text-align: center; letter-spacing: 0.2rem;">
             <p id="auth-code-error" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
         `;
         
@@ -884,7 +888,7 @@ const UI = {
                 <div class="outcome">
                     <h2>Outcome: Custom Authorization Form Selected</h2>
                     <p>You created a custom authorization form with the following content:</p>
-                    <pre class="custom-form-preview" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin: 1rem 0; font-family: 'Courier New', monospace; white-space: pre-wrap;">
+                    <pre class="custom-form-preview" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin: 1rem 0; font-family: var(--font-body); white-space: pre-wrap;">
 ${safeContent}
                     </pre>
                     <p style="margin-top: 1rem; color: var(--text-amber);">
@@ -1046,6 +1050,11 @@ ${safeContent}
             ]
         );
     },
+
+    getAuthorizationDate() {
+        const date = new Date();
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    },
     
     showCustomFormBuilder() {
         const formSelectionView = document.getElementById('form-selection-view');
@@ -1079,7 +1088,7 @@ ${safeContent}
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Support/Reject:</label>
                         <select id="signoff-support-${index}" 
-                                style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace;"
+                                style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body);"
                                 ${selectOnChange} ${selectDisabledAttr}>
                             <option value="">Select...</option>
                             <option value="support" ${signOff.support === 'support' ? 'selected' : ''}>Support</option>
@@ -1090,8 +1099,8 @@ ${safeContent}
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${codeName} supports/rejects:</label>
                         <textarea id="signoff-reason-${index}" 
                                   rows="3" 
-                                  style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"
-                                  placeholder="Enter reason (at least 5 words)..."
+                                  style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body); resize: vertical;"
+                                  placeholder="Enter reason..."
                                   ${textareaOnChange} ${textareaReadonlyAttr}>${signOff.reason}</textarea>
                         <p id="signoff-reason-error-${index}" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
                     </div>
@@ -1110,6 +1119,8 @@ ${safeContent}
             : (acceptanceStatus.canSubmit ? 'var(--accent-green)' : 'var(--bg-darker)');
         const customFormButtonCursor = gameCompleted ? 'pointer' : (acceptanceStatus.canSubmit ? 'pointer' : 'not-allowed');
         const customFormButtonOpacity = gameCompleted ? '1' : (acceptanceStatus.canSubmit ? '1' : '0.5');
+
+        const authorizationDate = this.getAuthorizationDate();
         
         customFormView.innerHTML = `
             <div class="form-selection-header">
@@ -1118,18 +1129,14 @@ ${safeContent}
                 <p style="color: var(--text-secondary); margin-bottom: 1rem;">
                     Create your custom authorization form and get team sign-offs.
                 </p>
-                <div style="background: var(--bg-darker); border-left: 4px solid var(--text-amber); padding: 1rem; margin-bottom: 1.5rem;">
-                    <p style="margin: 0; color: var(--text-primary);">
-                        <strong>Acceptance Status:</strong> ${acceptanceStatus.message}
-                    </p>
-                </div>
             </div>
             <div style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin-bottom: 2rem;">
-                <h3 style="color: var(--text-amber); margin-top: 0;">Form Content</h3>
+                <h3 style="color: var(--text-amber); margin-top: 0;">Authorization Form DLN-0999</h3>
+                <p>This order authorizes one Department of Homeland Security (DHS) employee or contractor to engage in a one-hour session with Anthony Haven (the "Actor") on ${authorizationDate}. This authorization is subject to the restrictions enumerated below.</p>
                 <textarea id="custom-form-content-input" 
                           rows="15" 
-                          style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: 'Courier New', monospace; resize: vertical;"
-                          placeholder="Enter your custom authorization form content here (at least 5 words)..."
+                          style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body); resize: vertical;"
+                          placeholder="Enter your custom authorization form content here..."
                           ${gameCompleted ? 'readonly' : 'onchange="UI.updateCustomFormContent(this.value)"'}>${customFormContent}</textarea>
                 <p id="custom-form-content-error" class="error-message" style="display: none; color: var(--text-red); font-size: 0.9rem; margin-top: 0.5rem;"></p>
             </div>
@@ -1137,11 +1144,16 @@ ${safeContent}
                 <h3 style="color: var(--text-amber);">Team Sign-Offs</h3>
                 ${signOffSlotsHTML}
             </div>
+            <div style="background: var(--bg-darker); border-left: 4px solid var(--text-amber); padding: 1rem; margin-top: 2rem; margin-bottom: 1.5rem;">
+                <p style="margin: 0; color: var(--text-primary);">
+                    <strong>Acceptance Status:</strong> ${acceptanceStatus.message}
+                </p>
+            </div>
             <div style="text-align: center; margin-top: 2rem;">
                 <button onclick="${customFormButtonOnClick}" 
                         id="submit-custom-form-btn"
                         ${customFormButtonDisabled}
-                        style="padding: 1rem 2rem; background: ${customFormButtonBackground}; border: none; color: var(--text-primary); font-family: 'Courier New', monospace; font-size: 1.1rem; cursor: ${customFormButtonCursor}; text-transform: uppercase; opacity: ${customFormButtonOpacity};">
+                        style="padding: 1rem 2rem; background: ${customFormButtonBackground}; border: none; color: var(--text-primary); font-family: var(--font-body); font-size: 1.1rem; cursor: ${customFormButtonCursor}; text-transform: uppercase; opacity: ${customFormButtonOpacity};">
                     ${customFormButtonLabel}
                 </button>
             </div>
@@ -1215,7 +1227,7 @@ ${safeContent}
         const wordCount = content.trim().split(/\s+/).filter(w => w.length > 0).length;
         
         if (wordCount < 5) {
-            errorEl.textContent = 'Form content must be at least 5 words long.';
+            errorEl.textContent = 'Custom authorization rules are insufficient.';
             errorEl.style.display = 'block';
         } else {
             errorEl.style.display = 'none';
@@ -1231,7 +1243,7 @@ ${safeContent}
         localStorage.setItem('customFormData', JSON.stringify(customFormData));
         
         // Validate reason
-        this.validateSignOffReason(memberName, reason, index, customFormData.signOffs);
+        // this.validateSignOffReason(memberName, reason, index, customFormData.signOffs);
         
         // Refresh acceptance status and button state
         this.refreshCustomFormUI();
@@ -1243,10 +1255,9 @@ ${safeContent}
         
         const errors = [];
         
-        // Check word count (at least 5 words)
         const wordCount = reason.trim().split(/\s+/).filter(w => w.length > 0).length;
         if (wordCount < 5) {
-            errors.push('Reason must be at least 5 words long.');
+            errors.push('Provide a stronger reason.');
         }
         
         // Check for duplicates
@@ -1313,7 +1324,7 @@ ${safeContent}
         if (contentWordCount < 5) {
             const errorEl = document.getElementById('custom-form-content-error');
             if (errorEl) {
-                errorEl.textContent = 'Form content must be at least 5 words long.';
+                errorEl.textContent = 'Custom authorization rules are insufficient.';
                 errorEl.style.display = 'block';
             }
             // Scroll to error
