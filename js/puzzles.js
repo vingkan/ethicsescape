@@ -66,6 +66,10 @@ const BenthamScaleConfig = {
     }
 };
 
+// Track Dirty Harry story submissions (memory-only, resets on page reload)
+let dirtyHarryLastStory = '';
+let dirtyHarryAttemptCount = 0;
+
 const Puzzles = {
     async showBenthamScales() {
         // Always show the puzzle, but conditionally show advisor content
@@ -828,21 +832,64 @@ const Puzzles = {
                 
                 <textarea id="dirty-harry-story" rows="10" style="width: 100%; background: var(--bg-darker); border: 2px solid var(--border-color); color: var(--text-primary); padding: 1rem; font-family: 'Courier New', monospace; margin: 1rem 0;"></textarea>
                 
-                <button onclick="Puzzles.submitDirtyHarry()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
+                <button id="dirty-harry-submit-btn" onclick="Puzzles.submitDirtyHarry()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: var(--accent-green); border: none; color: var(--text-primary); font-family: 'Courier New', monospace; cursor: pointer;">
                     Submit Story
                 </button>
                 <p id="dirty-harry-error" class="error-message" style="display:none;"></p>
                 <p id="dirty-harry-feedback" style="display:none; color: var(--text-amber); margin-top: 1rem;"></p>
+                <div id="dirty-harry-bypass-container" style="display:none; margin-top: 1rem;">
+                    <button onclick="Puzzles.acceptDirtyHarryAnyway()" style="padding: 0.75rem 2rem; background: var(--text-amber); border: none; color: var(--bg-darker); font-family: 'Courier New', monospace; cursor: pointer; font-weight: bold;">
+                        Accept Story Anyway
+                    </button>
+                    <p style="color: var(--text-secondary); margin-top: 1rem;">
+                        You've submitted multiple stories. If you believe your story meets the requirements, you can accept it anyway.
+                    </p>
+                </div>
             </div>
         `;
         
         UI.showPuzzle('dirty-harry', html);
+        
+        // Set up event listeners for textarea to update submit button state
+        const textarea = document.getElementById('dirty-harry-story');
+        const submitBtn = document.getElementById('dirty-harry-submit-btn');
+        
+        if (textarea && submitBtn) {
+            const updateButton = () => Puzzles.updateDirtyHarrySubmitButton();
+            textarea.addEventListener('input', updateButton);
+            textarea.addEventListener('paste', () => setTimeout(updateButton, 0));
+            
+            // Initial button state check
+            updateButton();
+        }
+    },
+    
+    updateDirtyHarrySubmitButton() {
+        const textarea = document.getElementById('dirty-harry-story');
+        const submitBtn = document.getElementById('dirty-harry-submit-btn');
+        
+        if (!textarea || !submitBtn) return;
+        
+        const currentStory = textarea.value.trim();
+        const isEmpty = currentStory === '';
+        const matchesLastStory = currentStory === dirtyHarryLastStory;
+        
+        if (isEmpty || matchesLastStory) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+        }
     },
     
     async submitDirtyHarry() {
         const story = document.getElementById('dirty-harry-story').value.trim();
         const errorEl = document.getElementById('dirty-harry-error');
         const feedbackEl = document.getElementById('dirty-harry-feedback');
+        const bypassContainer = document.getElementById('dirty-harry-bypass-container');
         
         if (!story) {
             if (errorEl) {
@@ -856,6 +903,15 @@ const Puzzles = {
             // Correct! Unlock dirty-harry and show code for custom-form
             GameState.unlockClue('dirty-harry');
             localStorage.setItem('dirtyHarryStory', story);
+            
+            // Reset tracking on success
+            dirtyHarryLastStory = '';
+            dirtyHarryAttemptCount = 0;
+            
+            // Hide bypass button if it was shown
+            if (bypassContainer) {
+                bypassContainer.style.display = 'none';
+            }
             
             // Show success message with code
             const clue = ClueSystem.getClue('custom-form');
@@ -885,7 +941,14 @@ const Puzzles = {
                 setupDiscoveryLocations();
             }
         } else {
-            // Provide feedback
+            // Story failed validation - check if this is different from last story
+            const isNewStory = story !== dirtyHarryLastStory;
+            if (isNewStory) {
+                dirtyHarryLastStory = story;
+                dirtyHarryAttemptCount++;
+            }
+            
+            // Provide feedback with attempt number
             const lowerStory = story.toLowerCase();
             const missing = [];
             if (!/lawful|legal|authorized|official/.test(lowerStory)) missing.push('normally lawful person');
@@ -893,9 +956,80 @@ const Puzzles = {
             if (!/immoral|wrong|unethical|not.*permissible|forbidden/.test(lowerStory)) missing.push('action not morally permissible');
             
             if (feedbackEl) {
-                feedbackEl.textContent = `Your story is missing: ${missing.join(', ')}. Please revise and try again.`;
+                let attemptText;
+                if (dirtyHarryAttemptCount <= 5) {
+                    attemptText = `Attempt ${dirtyHarryAttemptCount}/5`;
+                } else {
+                    attemptText = `Attempt ${dirtyHarryAttemptCount}`;
+                }
+                feedbackEl.textContent = `${attemptText}: Your story is missing: ${missing.join(', ')}. Please revise and try again.`;
                 feedbackEl.style.display = 'block';
             }
+            
+            // Show bypass button if 5 or more failed attempts
+            if (dirtyHarryAttemptCount >= 5 && bypassContainer) {
+                bypassContainer.style.display = 'block';
+            }
+            
+            // Update submit button state
+            this.updateDirtyHarrySubmitButton();
+        }
+    },
+    
+    async acceptDirtyHarryAnyway() {
+        const story = document.getElementById('dirty-harry-story').value.trim();
+        
+        if (!story) {
+            const errorEl = document.getElementById('dirty-harry-error');
+            if (errorEl) {
+                errorEl.textContent = 'Please write a story.';
+                errorEl.style.display = 'block';
+            }
+            return;
+        }
+        
+        // Bypass validation and trigger success flow
+        GameState.unlockClue('dirty-harry');
+        localStorage.setItem('dirtyHarryStory', story);
+        
+        // Hide bypass button
+        const bypassContainer = document.getElementById('dirty-harry-bypass-container');
+        if (bypassContainer) {
+            bypassContainer.style.display = 'none';
+        }
+        
+        // Hide feedback
+        const feedbackEl = document.getElementById('dirty-harry-feedback');
+        if (feedbackEl) {
+            feedbackEl.style.display = 'none';
+        }
+        
+        // Show success message with code
+        const clue = ClueSystem.getClue('custom-form');
+        const code = clue.key; // Code is '0999'
+        const viewer = document.getElementById('clue-viewer');
+        if (viewer) {
+            viewer.innerHTML += `
+                <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
+                    <p style="color: var(--text-primary); margin: 0;">
+                        <strong>✓ Your Dirty Harry scenario has been accepted.</strong>
+                    </p>
+                    <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                        <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
+                        <p style="color: var(--text-primary); font-size: 2rem; font-family: 'Courier New', monospace; font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
+                            Share this code with teammates who need to unlock the Custom Authorization Form clue.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        UI.updateClueCount();
+        
+        // Refresh discovery locations to show checkmark
+        if (typeof setupDiscoveryLocations === 'function') {
+            setupDiscoveryLocations();
         }
     }
 };
