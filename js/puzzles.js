@@ -309,7 +309,11 @@ const Puzzles = {
         if (currentDef) definitions.push(currentDef);
         
         return definitions.map((def, idx) => `
-            <div class="match-item definition" data-def="${def.name}">
+            <div
+                class="match-item definition"
+                data-def="${def.name}"
+                onclick="Puzzles.handleSteinhoffDropZoneClick('${def.name}')"
+            >
                 <strong>${def.name}</strong>
                 <p>${def.description}</p>
                 <div
