@@ -292,13 +292,19 @@ function handlePostItMouseUp(e) {
 }
 
 function updatePostItVisibility() {
+    // Check if discovery grid is visible (discovery screen)
+    const discoveryGrid = document.getElementById('discovery-grid');
+    const isDiscoveryScreenVisible = discoveryGrid && 
+        discoveryGrid.style.display !== 'none' && 
+        (discoveryGrid.style.display === 'grid' || discoveryGrid.style.display === '');
+    
     // Update secure-pager-code post-it visibility
     const pagerPostit = document.getElementById('pager-postit');
     if (pagerPostit) {
         // Store clue ID as data attribute
         pagerPostit.dataset.clueId = 'secure-pager-code';
         
-        if (GameState.hasClueAccess('secure-pager-code')) {
+        if (GameState.hasClueAccess('secure-pager-code') && isDiscoveryScreenVisible) {
             pagerPostit.style.display = '';
             // Initialize drag functionality
             initPostItDrag(pagerPostit);
@@ -637,6 +643,11 @@ async function handleDiscoveryClick(location) {
                 // Hide discovery grid when showing code input
                 if (discoveryGrid) {
                     discoveryGrid.style.display = 'none';
+                }
+                
+                // Update post-it visibility to hide it when discovery grid is hidden
+                if (typeof updatePostItVisibility === 'function') {
+                    updatePostItVisibility();
                 }
                 
                 if (viewer) {

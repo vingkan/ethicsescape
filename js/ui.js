@@ -133,6 +133,11 @@ const UI = {
         if (discoveryGrid) {
             discoveryGrid.style.display = 'none';
         }
+        
+        // Update post-it visibility to hide it when discovery grid is hidden
+        if (typeof updatePostItVisibility === 'function') {
+            updatePostItVisibility();
+        }
 
         // Render content
         if (content) {
@@ -165,6 +170,11 @@ const UI = {
         const discoveryGrid = document.getElementById('discovery-grid');
         if (discoveryGrid) {
             discoveryGrid.style.display = 'none';
+        }
+        
+        // Update post-it visibility to hide it when discovery grid is hidden
+        if (typeof updatePostItVisibility === 'function') {
+            updatePostItVisibility();
         }
         
         viewer.innerHTML = `
@@ -283,6 +293,11 @@ const UI = {
             discoveryGrid.style.display = 'none';
         }
         
+        // Update post-it visibility to hide it when discovery grid is hidden
+        if (typeof updatePostItVisibility === 'function') {
+            updatePostItVisibility();
+        }
+        
         viewer.innerHTML = `
             <div class="clue-header">
                 <h2>${clue.name}</h2>
@@ -302,6 +317,11 @@ const UI = {
         // Show discovery grid again
         if (discoveryGrid) {
             discoveryGrid.style.display = 'grid';
+        }
+        
+        // Update post-it visibility to show it when discovery grid is visible
+        if (typeof updatePostItVisibility === 'function') {
+            updatePostItVisibility();
         }
 
         viewer.style.display = 'none';

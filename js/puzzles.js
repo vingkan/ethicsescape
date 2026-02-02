@@ -585,12 +585,7 @@ const Puzzles = {
         
         const html = `
             <div class="historical-records-puzzle">
-                <p>Read through the historical records below. For each record, classify the subject according to Shue's three types:</p>
-                <ul>
-                    <li><strong>RC</strong> - Ready Collaborator: Immediately cooperates</li>
-                    <li><strong>IB</strong> - Innocent Bystander: Not involved, wrongly accused</li>
-                    <li><strong>DE</strong> - Dedicated Enemy: Committed to the cause, won't cooperate</li>
-                </ul>
+                <p>Read through the historical records below. For each record, classify the subject according to the three types from Shue's paper in the file cabinet:</p>
                 <p>Count how many of each type to form the unlock code.</p>
                 
                 <div class="classification-puzzle">
