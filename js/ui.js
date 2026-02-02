@@ -405,13 +405,32 @@ const UI = {
                     </h3>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Form Selection:</label>
-                        <select id="form-select-${index}" 
-                                style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body);"
-                                ${selectOnChange} ${selectDisabledAttr}>
-                            <option value="">Select a form...</option>
-                            <option value="form-a" ${selection.form === 'form-a' ? 'selected' : ''}>Form A: Enhanced Interrogation</option>
-                            <option value="form-b" ${selection.form === 'form-b' ? 'selected' : ''}>Form B: Psychologist Discussion</option>
-                        </select>
+                        <div id="form-select-tiles-${index}" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <label for="form-select-${index}-a" 
+                                    style="flex: 1; min-width: 200px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: ${selection.form === 'form-a' ? 'var(--bg-panel)' : 'var(--bg-darker)'}; border: 2px solid ${selection.form === 'form-a' ? 'var(--text-amber)' : 'var(--border-color)'}; cursor: ${gameCompleted ? 'default' : 'pointer'}; transition: all 0.3s; font-family: var(--font-body); text-align: center;">
+                                <input type="radio" 
+                                       id="form-select-${index}-a" 
+                                       name="form-select-${index}" 
+                                       value="form-a" 
+                                       ${selection.form === 'form-a' ? 'checked' : ''} 
+                                       ${selectDisabledAttr}
+                                       style="cursor: ${gameCompleted ? 'default' : 'pointer'};"
+                                       ${selectOnChange ? `onchange="UI.updateFormSelection('${codeName}', this.value); UI.updateFormTiles('${index}')"` : ''}>
+                                <span style="color: var(--text-primary);">Form A: Enhanced Interrogation</span>
+                            </label>
+                            <label for="form-select-${index}-b" 
+                                    style="flex: 1; min-width: 200px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: ${selection.form === 'form-b' ? 'var(--bg-panel)' : 'var(--bg-darker)'}; border: 2px solid ${selection.form === 'form-b' ? 'var(--text-amber)' : 'var(--border-color)'}; cursor: ${gameCompleted ? 'default' : 'pointer'}; transition: all 0.3s; font-family: var(--font-body); text-align: center;">
+                                <input type="radio" 
+                                       id="form-select-${index}-b" 
+                                       name="form-select-${index}" 
+                                       value="form-b" 
+                                       ${selection.form === 'form-b' ? 'checked' : ''} 
+                                       ${selectDisabledAttr}
+                                       style="cursor: ${gameCompleted ? 'default' : 'pointer'};"
+                                       ${selectOnChange ? `onchange="UI.updateFormSelection('${codeName}', this.value); UI.updateFormTiles('${index}')"` : ''}>
+                                <span style="color: var(--text-primary);">Form B: Psychologist Discussion</span>
+                            </label>
+                        </div>
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${codeName} supports this option:</label>
@@ -495,6 +514,29 @@ const UI = {
         if (submitBtn) submitBtn.style.display = 'none';
         if (placeholder) placeholder.style.display = 'none';
         
+        // Add hover handlers for form selection tiles
+        if (!gameCompleted) {
+            team.members.forEach((codeName, index) => {
+                const tiles = document.querySelectorAll(`#form-select-tiles-${index} label`);
+                tiles.forEach(tile => {
+                    tile.onmouseover = function() {
+                        const radio = tile.querySelector('input[type="radio"]');
+                        if (radio && !radio.checked && !radio.disabled) {
+                            this.style.borderColor = 'var(--text-amber)';
+                            this.style.background = 'var(--bg-panel)';
+                        }
+                    };
+                    tile.onmouseout = function() {
+                        const radio = tile.querySelector('input[type="radio"]');
+                        if (radio && !radio.checked && !radio.disabled) {
+                            this.style.borderColor = 'var(--border-color)';
+                            this.style.background = 'var(--bg-darker)';
+                        }
+                    };
+                });
+            });
+        }
+        
         // Scroll to top
         window.scrollTo(0, 0);
     },
@@ -513,6 +555,21 @@ const UI = {
             { id: 'form-b', name: 'Form B: Psychologist Discussion', preview: 'Authorizes psychologist discussion.' }
         ];
         this.showFormSelection(forms);
+    },
+    
+    updateFormTiles(index) {
+        // Update visual state of form selection tiles
+        const tiles = document.querySelectorAll(`#form-select-tiles-${index} label`);
+        tiles.forEach(tile => {
+            const radio = tile.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                tile.style.borderColor = 'var(--text-amber)';
+                tile.style.background = 'var(--bg-panel)';
+            } else {
+                tile.style.borderColor = 'var(--border-color)';
+                tile.style.background = 'var(--bg-darker)';
+            }
+        });
     },
     
     updateFormReason(memberName, reason, index) {
@@ -1417,7 +1474,7 @@ ${safeContent}
             const selectDisabledAttr = gameCompleted ? 'disabled' : '';
             const textareaReadonlyAttr = gameCompleted ? 'readonly' : '';
             const selectOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${codeName}', this.value, document.getElementById('signoff-reason-${index}').value, ${index})"`;
-            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${codeName}', document.getElementById('signoff-support-${index}').value, this.value, ${index})"`;
+            const textareaOnChange = gameCompleted ? '' : `onchange="UI.updateSignOff('${codeName}', document.querySelector('input[name=\\'signoff-support-${index}\\']:checked')?.value || '', this.value, ${index})"`;
             return `
                 <div class="team-slot" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin-bottom: 1rem;">
                     <h3 style="color: var(--text-amber); margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
@@ -1426,13 +1483,32 @@ ${safeContent}
                     </h3>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Support/Reject:</label>
-                        <select id="signoff-support-${index}" 
-                                style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-body);"
-                                ${selectOnChange} ${selectDisabledAttr}>
-                            <option value="">Select...</option>
-                            <option value="support" ${signOff.support === 'support' ? 'selected' : ''}>Support</option>
-                            <option value="reject" ${signOff.support === 'reject' ? 'selected' : ''}>Reject</option>
-                        </select>
+                        <div id="signoff-support-tiles-${index}" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <label for="signoff-support-${index}-support" 
+                                    style="flex: 1; min-width: 150px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: ${signOff.support === 'support' ? 'var(--bg-panel)' : 'var(--bg-darker)'}; border: 2px solid ${signOff.support === 'support' ? 'var(--text-amber)' : 'var(--border-color)'}; cursor: ${gameCompleted ? 'default' : 'pointer'}; transition: all 0.3s; font-family: var(--font-body); text-align: center;">
+                                <input type="radio" 
+                                       id="signoff-support-${index}-support" 
+                                       name="signoff-support-${index}" 
+                                       value="support" 
+                                       ${signOff.support === 'support' ? 'checked' : ''} 
+                                       ${selectDisabledAttr}
+                                       style="cursor: ${gameCompleted ? 'default' : 'pointer'};"
+                                       ${selectOnChange ? `onchange="UI.updateSignOff('${codeName}', this.value, document.getElementById('signoff-reason-${index}').value, ${index}); UI.updateSignOffTiles('${index}')"` : ''}>
+                                <span style="color: var(--text-primary);">Support</span>
+                            </label>
+                            <label for="signoff-support-${index}-reject" 
+                                    style="flex: 1; min-width: 150px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: ${signOff.support === 'reject' ? 'var(--bg-panel)' : 'var(--bg-darker)'}; border: 2px solid ${signOff.support === 'reject' ? 'var(--text-amber)' : 'var(--border-color)'}; cursor: ${gameCompleted ? 'default' : 'pointer'}; transition: all 0.3s; font-family: var(--font-body); text-align: center;">
+                                <input type="radio" 
+                                       id="signoff-support-${index}-reject" 
+                                       name="signoff-support-${index}" 
+                                       value="reject" 
+                                       ${signOff.support === 'reject' ? 'checked' : ''} 
+                                       ${selectDisabledAttr}
+                                       style="cursor: ${gameCompleted ? 'default' : 'pointer'};"
+                                       ${selectOnChange ? `onchange="UI.updateSignOff('${codeName}', this.value, document.getElementById('signoff-reason-${index}').value, ${index}); UI.updateSignOffTiles('${index}')"` : ''}>
+                                <span style="color: var(--text-primary);">Reject</span>
+                            </label>
+                        </div>
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Why ${codeName} supports/rejects:</label>
@@ -1498,6 +1574,29 @@ ${safeContent}
             </div>
         `;
         customFormView.style.display = 'block';
+        
+        // Add hover handlers for signoff tiles
+        if (!gameCompleted) {
+            team.members.forEach((codeName, index) => {
+                const tiles = document.querySelectorAll(`#signoff-support-tiles-${index} label`);
+                tiles.forEach(tile => {
+                    tile.onmouseover = function() {
+                        const radio = tile.querySelector('input[type="radio"]');
+                        if (radio && !radio.checked && !radio.disabled) {
+                            this.style.borderColor = 'var(--text-amber)';
+                            this.style.background = 'var(--bg-panel)';
+                        }
+                    };
+                    tile.onmouseout = function() {
+                        const radio = tile.querySelector('input[type="radio"]');
+                        if (radio && !radio.checked && !radio.disabled) {
+                            this.style.borderColor = 'var(--border-color)';
+                            this.style.background = 'var(--bg-darker)';
+                        }
+                    };
+                });
+            });
+        }
         
         // Scroll to top
         window.scrollTo(0, 0);
@@ -1586,6 +1685,21 @@ ${safeContent}
         
         // Refresh acceptance status and button state
         this.refreshCustomFormUI();
+    },
+    
+    updateSignOffTiles(index) {
+        // Update visual state of signoff tiles
+        const tiles = document.querySelectorAll(`#signoff-support-tiles-${index} label`);
+        tiles.forEach(tile => {
+            const radio = tile.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                tile.style.borderColor = 'var(--text-amber)';
+                tile.style.background = 'var(--bg-panel)';
+            } else {
+                tile.style.borderColor = 'var(--border-color)';
+                tile.style.background = 'var(--bg-darker)';
+            }
+        });
     },
     
     validateSignOffReason(memberName, reason, index, signOffs) {
