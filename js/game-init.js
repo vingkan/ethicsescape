@@ -409,10 +409,12 @@ function enableDirtyHarrySubmitButton() {
     }
 }
 
+const USE_DIRTY_HARRY_LLM = false;
+
 async function initializeDirtyHarryLLM() {
     // Check if WebLLM is available
-    if (!window.webllm) {
-        console.warn('WebLLM not available, Dirty Harry validation will use fallback');
+    if (!window.webllm || !USE_DIRTY_HARRY_LLM) {
+        console.warn('WebLLM not available or LLM disabled, Dirty Harry validation will use fallback');
         window.dirtyHarryLLMEngine = null;
         // Enable button anyway since we have fallback
         enableDirtyHarrySubmitButton();

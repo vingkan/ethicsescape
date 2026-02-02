@@ -883,7 +883,7 @@ const Puzzles = {
         
         if (submitBtn) {
             // Initially disable button if LLM is still loading
-            if (!window.dirtyHarryLLMEngine && window.webllm && typeof caches !== 'undefined') {
+            if (USE_DIRTY_HARRY_LLM && !window.dirtyHarryLLMEngine && window.webllm && typeof caches !== 'undefined') {
                 // LLM is available but not loaded yet - disable and show loading
                 submitBtn.disabled = true;
                 submitBtn.style.opacity = '0.5';
