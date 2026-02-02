@@ -394,7 +394,7 @@ const ClueSystem = {
 Story to analyze:
 ${sanitizedStory}
 
-Respond with ONLY a comma-separated list of the elements found (e.g., "lawful person, legal mandate" or "lawful person, legal mandate, immoral action"). If none are found, respond with an empty string.`;
+Respond with ONLY a comma-separated list of the elements found (e.g., "lawful person, legal mandate" or "lawful person, legal mandate, immoral action"). If none are found, respond with "none".`;
             
             const messages = [
                 { role: 'system', content: systemMessage },
@@ -410,6 +410,9 @@ Respond with ONLY a comma-separated list of the elements found (e.g., "lawful pe
             
             // Extract response text
             const responseText = response.choices[0]?.message?.content || '';
+            if (responseText === 'none') {
+                console.log('No elements found in story.');
+            }
             const normalizedResponse = responseText.trim().toLowerCase();
             
             // Parse the comma-separated list

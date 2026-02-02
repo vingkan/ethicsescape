@@ -435,7 +435,7 @@ async function initializeDirtyHarryLLM() {
         
         // Create and load the LLM engine
         const engine = await window.webllm.CreateMLCEngine(
-            'Llama-3-8B-Instruct-q4f16_1-MLC',
+            'SmolLM2-360M-Instruct-q4f32_1-MLC',
             { initProgressCallback }
         );
         
