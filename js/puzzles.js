@@ -585,7 +585,8 @@ const Puzzles = {
         
         const html = `
             <div class="historical-records-puzzle">
-                <p>Read through the historical records below. For each record, classify the subject according to the three types from Shue's paper in the file cabinet:</p>
+                <p>Read through the historical records below.</p>
+                <p>For each record, classify the subject according to the three types from Shue's paper in the file cabinet.</p>
                 <p>Count how many of each type to form the unlock code.</p>
                 
                 <div class="classification-puzzle">
@@ -736,7 +737,9 @@ const Puzzles = {
                     </blockquote>
                 </div>
 
-                <p>It is often misused, so you could check out some of what I hear get tossed around at the office. Decide which statements are supported by the principle of intervening action and those numbers should line up to form the password of a pamphlet I sent to the APA.</p>
+                <p>It is often misused, so you could check out some of what I hear get tossed around at the office.</p>
+                <p>Each statement includes a situation and a conclusion.</p>
+                <p>Decide which conclusions are supported by the principle of intervening action and those numbers should line up to form the password of a pamphlet I sent to the APA.</p>
                 
                 <div class="statements-list">
                     ${this.renderStatements(interveningText)}
