@@ -1109,9 +1109,9 @@ ${safeContent}
                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
                     Rate your team's performance on each virtue scale. The mean (center) represents the ideal balance.
                 </p>
-                ${this.buildVirtueSlider('deliberation', 'Deliberation', 'Over-Cautiousness', 'Recklessness', savedVirtues.deliberation || 0)}
-                ${this.buildVirtueSlider('passion', 'Passion', 'Zeal', 'Apathy', savedVirtues.passion || 0)}
-                ${this.buildVirtueSlider('justice', 'Justice', 'Leniency', 'Maleficence', savedVirtues.justice || 0)}
+                ${this.buildVirtueSlider('deliberation', 'Deliberation', 'Recklessness', 'Over-Cautiousness', savedVirtues.deliberation || 0)}
+                ${this.buildVirtueSlider('passion', 'Passion', 'Apathy', 'Zeal', savedVirtues.passion || 0)}
+                ${this.buildVirtueSlider('justice', 'Justice', 'Maleficence', 'Leniency', savedVirtues.justice || 0)}
             </div>
         `;
         
