@@ -96,6 +96,7 @@ const discoveryLocations = [
 ];
 
 let timerInterval = null;
+let hasCalledTimeExpired = false;
 
 // Drag state for post-it notes
 let dragState = {
@@ -777,6 +778,9 @@ function showMDOSChart() {
 }
 
 function startTimer() {
+    // Reset the flag when starting a new timer
+    hasCalledTimeExpired = false;
+    
     // Update immediately
     updateTimerDisplay();
     
@@ -785,9 +789,9 @@ function startTimer() {
         const timerInfo = GameState.updateTimer();
         UI.updateTimer(timerInfo);
         
-        // Check if expired
-        if (timerInfo.expired) {
-            clearInterval(timerInterval);
+        // Check if expired - call handleTimeExpired() once, but continue the timer
+        if (timerInfo.expired && !hasCalledTimeExpired) {
+            hasCalledTimeExpired = true;
             handleTimeExpired();
         }
     }, 1000);
@@ -799,12 +803,12 @@ function updateTimerDisplay() {
 }
 
 function handleTimeExpired() {
-    // Disable clue discovery
-    const discoveryItems = document.querySelectorAll('.discovery-item');
-    discoveryItems.forEach(item => {
-        item.style.pointerEvents = 'none';
-        item.style.opacity = '0.5';
-    });
+    // Disable clue discovery (no!)
+    // const discoveryItems = document.querySelectorAll('.discovery-item');
+    // discoveryItems.forEach(item => {
+    //     item.style.pointerEvents = 'none';
+    //     item.style.opacity = '0.5';
+    // });
     
     // Only first player can access form selection
     const currentPlayerIndex = GameState.getCurrentPlayerIndex();
