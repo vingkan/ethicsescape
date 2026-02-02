@@ -383,6 +383,78 @@ function updatePlayerBadge() {
     `;
 }
 
+function enableDirtyHarrySubmitButton() {
+    const submitBtn = document.getElementById('dirty-harry-submit-btn');
+    if (submitBtn) {
+        // Update button text - LLM is ready
+        submitBtn.textContent = 'Submit Story';
+        
+        // Now update button state based on textarea content
+        // This will enable if there's text, disable if empty
+        if (typeof Puzzles !== 'undefined' && Puzzles.updateDirtyHarrySubmitButton) {
+            Puzzles.updateDirtyHarrySubmitButton();
+        } else {
+            // Fallback: just enable the button if Puzzles not available
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+        }
+    }
+}
+
+async function initializeDirtyHarryLLM() {
+    // Check if WebLLM is available
+    if (!window.webllm) {
+        console.warn('WebLLM not available, Dirty Harry validation will use fallback');
+        window.dirtyHarryLLMEngine = null;
+        // Enable button anyway since we have fallback
+        enableDirtyHarrySubmitButton();
+        return;
+    }
+    
+    // Check if Cache API is available (required by WebLLM)
+    // Cache API is only available in secure contexts (HTTPS or localhost)
+    if (typeof caches === 'undefined') {
+        console.warn('Cache API not available. WebLLM requires HTTPS or localhost. Dirty Harry validation will use fallback.');
+        window.dirtyHarryLLMEngine = null;
+        // Enable button anyway since we have fallback
+        enableDirtyHarrySubmitButton();
+        return;
+    }
+    
+    try {
+        // Initialize progress callback
+        const initProgressCallback = (progress) => {
+            // Update button text with loading progress
+            const submitBtn = document.getElementById('dirty-harry-submit-btn');
+            if (submitBtn && progress.progress > 0 && progress.progress < 1) {
+                const percent = Math.round(progress.progress * 100);
+                submitBtn.textContent = `Loading... ${percent}%`;
+            }
+        };
+        
+        // Create and load the LLM engine
+        const engine = await window.webllm.CreateMLCEngine(
+            'Llama-3-8B-Instruct-q4f16_1-MLC',
+            { initProgressCallback }
+        );
+        
+        // Store engine globally for use in validation
+        window.dirtyHarryLLMEngine = engine;
+        console.log('Dirty Harry LLM engine loaded successfully');
+        
+        // Enable submit button now that LLM is ready
+        enableDirtyHarrySubmitButton();
+    } catch (error) {
+        console.error('Failed to load Dirty Harry LLM engine:', error);
+        // Don't block game initialization if LLM fails to load
+        // Validation will fall back to regex-based validation
+        window.dirtyHarryLLMEngine = null;
+        // Enable button anyway since we have fallback
+        enableDirtyHarrySubmitButton();
+    }
+}
+
 async function initGame() {
     // Check if game should be initialized or resumed
     const wasInProgress = GameState.init();
@@ -403,6 +475,11 @@ async function initGame() {
     
     // Load initial content
     await loadInitialContent();
+    
+    // Initialize LLM for Dirty Harry validation if player has access (non-blocking)
+    if (GameState.hasClueAccess('dirty-harry')) {
+        initializeDirtyHarryLLM(); // Don't await - let it load in background
+    }
     
     // Update post-it note visibility (before setupDiscoveryLocations to ensure it's set)
     updatePostItVisibility();

@@ -883,6 +883,22 @@ const Puzzles = {
         const textarea = document.getElementById('dirty-harry-story');
         const submitBtn = document.getElementById('dirty-harry-submit-btn');
         
+        if (submitBtn) {
+            // Initially disable button if LLM is still loading
+            if (!window.dirtyHarryLLMEngine && window.webllm && typeof caches !== 'undefined') {
+                // LLM is available but not loaded yet - disable and show loading
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+                submitBtn.textContent = 'Loading...';
+            } else {
+                // LLM not available or already loaded - enable button
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+        }
+        
         if (textarea && submitBtn) {
             const updateButton = () => Puzzles.updateDirtyHarrySubmitButton();
             textarea.addEventListener('input', updateButton);
@@ -899,6 +915,22 @@ const Puzzles = {
         
         if (!textarea || !submitBtn) return;
         
+        // If button text is "Submit Story", LLM has finished loading (or was never needed)
+        // Skip loading check in that case
+        const buttonText = submitBtn.textContent.trim();
+        const isLLMFinishedLoading = buttonText === 'Submit Story' || window.dirtyHarryLLMEngine;
+        
+        // Check if LLM is still loading (button should remain disabled)
+        // Only check if button text indicates loading AND LLM isn't finished
+        if (!isLLMFinishedLoading) {
+            const isLLMLoading = !window.dirtyHarryLLMEngine && window.webllm && typeof caches !== 'undefined';
+            if (isLLMLoading && buttonText.includes('Loading')) {
+                // Keep button disabled while loading
+                return;
+            }
+        }
+        
+        // LLM is loaded or not available - proceed with normal button state logic
         const currentStory = textarea.value.trim();
         const isEmpty = currentStory === '';
         const matchesLastStory = currentStory === dirtyHarryLastStory;
@@ -908,6 +940,7 @@ const Puzzles = {
             submitBtn.style.opacity = '0.5';
             submitBtn.style.cursor = 'not-allowed';
         } else {
+            // Enable button if there's text
             submitBtn.disabled = false;
             submitBtn.style.opacity = '1';
             submitBtn.style.cursor = 'pointer';
@@ -919,6 +952,7 @@ const Puzzles = {
         const errorEl = document.getElementById('dirty-harry-error');
         const feedbackEl = document.getElementById('dirty-harry-feedback');
         const bypassContainer = document.getElementById('dirty-harry-bypass-container');
+        const submitBtn = document.getElementById('dirty-harry-submit-btn');
         
         if (!story) {
             if (errorEl) {
@@ -928,80 +962,121 @@ const Puzzles = {
             return;
         }
         
-        if (ClueSystem.validateDirtyHarryStory(story)) {
-            // Correct! Unlock dirty-harry and show code for custom-form
-            GameState.unlockClue('dirty-harry');
-            localStorage.setItem('dirtyHarryStory', story);
+        // Disable submit button during validation
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+            submitBtn.textContent = 'Validating...';
+        }
+        
+        try {
+            // Validate story using LLM (async)
+            const validationResult = await ClueSystem.validateDirtyHarryStory(story);
             
-            // Reset tracking on success
-            dirtyHarryLastStory = '';
-            dirtyHarryAttemptCount = 0;
-            
-            // Hide bypass button if it was shown
-            if (bypassContainer) {
-                bypassContainer.style.display = 'none';
+            // Re-enable submit button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.textContent = 'Submit Story';
             }
             
-            // Show success message with code
-            const clue = ClueSystem.getClue('custom-form');
-            const code = clue.key; // Code is '0999'
-            const viewer = document.getElementById('clue-viewer');
-            if (viewer) {
-                viewer.innerHTML += `
-                    <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
-                        <p style="color: var(--text-primary); margin: 0;">
-                            <strong>✓ Your Dirty Harry scenario has been accepted.</strong>
-                        </p>
-                        <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
-                            <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
-                            <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
-                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
-                                This authorization code unlocks the Custom Authorization Form.
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            UI.updateClueCount();
-            
-            // Refresh discovery locations to show checkmark
-            if (typeof setupDiscoveryLocations === 'function') {
-                setupDiscoveryLocations();
-            }
-        } else {
-            // Story failed validation - check if this is different from last story
-            const isNewStory = story !== dirtyHarryLastStory;
-            if (isNewStory) {
-                dirtyHarryLastStory = story;
-                dirtyHarryAttemptCount++;
-            }
-            
-            // Provide feedback with attempt number
-            const lowerStory = story.toLowerCase();
-            const missing = [];
-            if (!/lawful|legal|authorized|official/.test(lowerStory)) missing.push('normally lawful person');
-            if (!/mandate|duty|responsibility|required|must/.test(lowerStory)) missing.push('legal mandate');
-            if (!/immoral|wrong|unethical|not.*permissible|forbidden/.test(lowerStory)) missing.push('action not morally permissible');
-            
-            if (feedbackEl) {
-                let attemptText;
-                if (dirtyHarryAttemptCount <= 5) {
-                    attemptText = `Attempt ${dirtyHarryAttemptCount}/5`;
-                } else {
-                    attemptText = `Attempt ${dirtyHarryAttemptCount}`;
+            if (validationResult.valid) {
+                // Correct! Unlock dirty-harry and show code for custom-form
+                GameState.unlockClue('dirty-harry');
+                localStorage.setItem('dirtyHarryStory', story);
+                
+                // Reset tracking on success
+                dirtyHarryLastStory = '';
+                dirtyHarryAttemptCount = 0;
+                
+                // Hide bypass button if it was shown
+                if (bypassContainer) {
+                    bypassContainer.style.display = 'none';
                 }
-                feedbackEl.textContent = `${attemptText}: Your story is missing: ${missing.join(', ')}. Please revise and try again.`;
-                feedbackEl.style.display = 'block';
+                
+                // Hide error and feedback
+                if (errorEl) errorEl.style.display = 'none';
+                if (feedbackEl) feedbackEl.style.display = 'none';
+                
+                // Show success message with code
+                const clue = ClueSystem.getClue('custom-form');
+                const code = clue.key; // Code is '0999'
+                const viewer = document.getElementById('clue-viewer');
+                if (viewer) {
+                    viewer.innerHTML += `
+                        <div style="background: var(--accent-green); border: 2px solid var(--text-amber); padding: 1rem; margin-top: 1rem;">
+                            <p style="color: var(--text-primary); margin: 0;">
+                                <strong>✓ Your Dirty Harry scenario has been accepted.</strong>
+                            </p>
+                            <div style="background: var(--bg-darker); border: 2px solid var(--text-amber); padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                                <p style="color: var(--text-amber); font-size: 1.2rem; font-weight: bold; margin: 0 0 0.5rem 0;">Unlock Code:</p>
+                                <p style="color: var(--text-primary); font-size: 2rem; font-family: var(--font-body); font-weight: bold; margin: 0; letter-spacing: 0.2rem;">${code}</p>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 0 0;">
+                                    This authorization code unlocks the Custom Authorization Form.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                UI.updateClueCount();
+                
+                // Refresh discovery locations to show checkmark
+                if (typeof setupDiscoveryLocations === 'function') {
+                    setupDiscoveryLocations();
+                }
+            } else {
+                // Story failed validation - check if this is different from last story
+                const isNewStory = story !== dirtyHarryLastStory;
+                if (isNewStory) {
+                    dirtyHarryLastStory = story;
+                    dirtyHarryAttemptCount++;
+                }
+                
+                // Provide feedback with attempt number using missing elements from validation
+                const missing = validationResult.missing || [];
+                
+                if (feedbackEl) {
+                    let attemptText;
+                    if (dirtyHarryAttemptCount <= 5) {
+                        attemptText = `Attempt ${dirtyHarryAttemptCount}/5`;
+                    } else {
+                        attemptText = `Attempt ${dirtyHarryAttemptCount}`;
+                    }
+                    if (missing.length > 0) {
+                        feedbackEl.textContent = `${attemptText}: Your story is missing: ${missing.join(', ')}. Please revise and try again.`;
+                    } else {
+                        feedbackEl.textContent = `${attemptText}: Your story does not meet the requirements. Please revise and try again.`;
+                    }
+                    feedbackEl.style.display = 'block';
+                }
+                
+                // Show bypass button if 5 or more failed attempts
+                if (dirtyHarryAttemptCount >= 5 && bypassContainer) {
+                    bypassContainer.style.display = 'block';
+                }
+                
+                // Update submit button state
+                this.updateDirtyHarrySubmitButton();
+            }
+        } catch (error) {
+            console.error('Error during Dirty Harry validation:', error);
+            
+            // Re-enable submit button on error
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                submitBtn.textContent = 'Submit Story';
             }
             
-            // Show bypass button if 5 or more failed attempts
-            if (dirtyHarryAttemptCount >= 5 && bypassContainer) {
-                bypassContainer.style.display = 'block';
+            // Show error message
+            if (errorEl) {
+                errorEl.textContent = 'An error occurred while validating your story. Please try again.';
+                errorEl.style.display = 'block';
             }
-            
-            // Update submit button state
-            this.updateDirtyHarrySubmitButton();
         }
     },
     
