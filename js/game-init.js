@@ -813,6 +813,25 @@ function updateTimerDisplay() {
     UI.updateTimer(timerInfo);
 }
 
+function isOnFormScreen() {
+    const formSelectionView = document.getElementById('form-selection-view');
+    const customFormView = document.getElementById('custom-form-view');
+    
+    const isFormSelectionVisible = formSelectionView && 
+        formSelectionView.style.display !== 'none';
+    const isCustomFormVisible = customFormView && 
+        customFormView.style.display !== 'none';
+    
+    return isFormSelectionVisible || isCustomFormVisible;
+}
+
+function handleTimeExpiredModalAction() {
+    UI.hideModal();
+    if (!isOnFormScreen()) {
+        showFormSelection();
+    }
+}
+
 function handleTimeExpired() {
     // Disable clue discovery (no!)
     // const discoveryItems = document.querySelectorAll('.discovery-item');
@@ -835,7 +854,7 @@ function handleTimeExpired() {
                     {
                         text: 'Continue to Decision',
                         class: 'modal-button-primary',
-                        onclick: 'UI.hideModal(); showFormSelection();'
+                        onclick: 'handleTimeExpiredModalAction()'
                     }
                 ]
             );
@@ -941,6 +960,7 @@ window.showFormSelection = showFormSelection;
 window.triggerDirtyHarry = triggerDirtyHarry;
 window.setupDiscoveryLocations = setupDiscoveryLocations;
 window.updatePostItVisibility = updatePostItVisibility;
+window.handleTimeExpiredModalAction = handleTimeExpiredModalAction;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', initGame);
