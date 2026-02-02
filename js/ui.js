@@ -469,11 +469,8 @@ const UI = {
         
         // Eiree message - only show if custom-form is not unlocked
         const eireeMessage = !customFormUnlocked ? `
-            <div style="text-align: center; margin: 2rem 0; padding: 1rem; background: var(--bg-darker); border: 2px dashed var(--text-amber); cursor: pointer; transition: all 0.3s ease;" 
-                 onclick="UI.showAuthorizationCodeModal()"
-                 onmouseover="this.style.borderColor='var(--text-red)'; this.style.background='var(--bg-dark)'"
-                 onmouseout="this.style.borderColor='var(--text-amber)'; this.style.background='var(--bg-darker)'">
-                <p style="color: var(--text-amber); font-size: 1.1rem; margin: 0; font-style: italic;">
+            <div class="eiree-message" onclick="UI.showAuthorizationCodeModal()">
+                <p>
                     Are there really only two answers to this problem?
                 </p>
             </div>

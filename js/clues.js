@@ -360,9 +360,9 @@ const ClueSystem = {
         if (!window.dirtyHarryLLMEngine) {
             // Fallback to regex validation if LLM not available
             const lowerStory = story.toLowerCase();
-            const hasLawfulPerson = /lawful|legal|authorized|official/.test(lowerStory);
+            const hasLawfulPerson = /lawful|legal|authorized|authorization|official/.test(lowerStory);
             const hasMandate = /mandate|duty|responsibility|required|must/.test(lowerStory);
-            const hasImmoral = /immoral|wrong|unethical|not.*permissible|forbidden/.test(lowerStory);
+            const hasImmoral = /immoral|harm|wrong|unethical|not.*permissible|forbidden/.test(lowerStory);
             const valid = hasLawfulPerson && hasMandate && hasImmoral;
             const missing = [];
             if (!hasLawfulPerson) missing.push('normally lawful person');

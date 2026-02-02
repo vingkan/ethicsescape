@@ -1620,3 +1620,29 @@ textarea[readonly] {
     color: var(--text-secondary);
     border-color: var(--border-color);
 }
+
+/* Eiree message prompt */
+.eiree-message {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 1rem;
+    background: var(--bg-darker);
+    border: 2px dashed var(--text-amber);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-amber);
+    font-size: 1.1rem;
+    font-style: italic;
+}
+
+.eiree-message:hover {
+    border-color: var(--text-red);
+    background: var(--bg-dark);
+    color: var(--text-red);
+}
+
+.eiree-message p {
+    font-size: 1.1rem;
+    margin: 0;
+    font-style: italic;
+}
