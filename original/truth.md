@@ -24,4 +24,4 @@
 
 ### Writing a Custom Form
 
-- Ask your game master to consult the rubric for the outcome.
+- Ask your game facilitator to assess the outcome.

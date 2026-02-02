@@ -227,7 +227,7 @@ p {
 
 /* Main Layout */
 .game-container {
-    min-height: calc(100vh - 80px);
+    min-height: calc(100dvh - 80px);
 }
 
 /* Main Content */
@@ -235,7 +235,7 @@ p {
     width: 100%;
     padding: 2rem;
     overflow-y: auto;
-    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
     position: relative;
 }
 
