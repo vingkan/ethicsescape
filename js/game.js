@@ -53,6 +53,8 @@ const GameState = {
         localStorage.removeItem('formSelections');
         localStorage.removeItem('customFormData');
         localStorage.removeItem('customFormContent');
+        // Clear game start time to indicate that no game is in progress
+        localStorage.removeItem('gameStartTime');
     },
     
     saveTeam(teamMembers) {

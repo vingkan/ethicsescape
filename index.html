@@ -101,6 +101,29 @@
             transform: scale(1.05);
         }
 
+        .return-button {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 1.5rem 3rem;
+            background: var(--text-amber);
+            border: none;
+            color: var(--bg-dark);
+            font-size: 1.2rem;
+            font-family: var(--font-body);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .return-button:hover {
+            background: var(--accent-green);
+            color: var(--text-primary);
+            transform: scale(1.05);
+        }
+
         .credits {
             text-align: center;
             color: var(--text-secondary);
@@ -189,6 +212,9 @@
             </div>
 
             <button class="start-button" onclick="startGame()" id="start-game-btn">Start Game</button>
+
+            <button class="return-button" id="return-to-game-btn" onclick="returnToGame()">Return to Game In
+                Progress</button>
 
             <div class="credits">
                 <p>Produced by Christina Qiu, Maria Gargiulo, Vinesh Kannan, and Zhi Keng He.</p>
@@ -365,8 +391,37 @@
             window.location.href = 'game.html';
         }
 
+        function checkGameInProgress() {
+            const returnButton = document.getElementById('return-to-game-btn');
+            const teamSelectionSection = document.getElementById('team-selection-section');
+            const startGameBtn = document.getElementById('start-game-btn');
+
+            if (!returnButton || !teamSelectionSection || !startGameBtn) return;
+
+            // Check if gameStartTime exists in localStorage
+            const gameStartTime = localStorage.getItem('gameStartTime');
+            if (!gameStartTime) {
+                // No game in progress - show team selection and start button, hide return button
+                returnButton.style.display = 'none';
+                teamSelectionSection.style.display = 'block';
+                startGameBtn.style.display = 'block';
+            } else {
+                // Game in progress - show return button, hide team selection and start button
+                returnButton.style.display = 'block';
+                teamSelectionSection.style.display = 'none';
+                startGameBtn.style.display = 'none';
+            }
+        }
+
+        function returnToGame() {
+            window.location.href = 'game.html';
+        }
+
         // Initialize team size radio tiles and attach event listeners after DOM loads
         window.addEventListener('DOMContentLoaded', function () {
+            // Check if game is in progress and show/hide return button
+            checkGameInProgress();
+
             const teamSizeTiles = document.getElementById('team-size-tiles');
             if (teamSizeTiles) {
                 // Create radio tiles for team size (1-4 players)
@@ -417,6 +472,22 @@
                 }
             }
             loadTeamData();
+        });
+
+        // Handle page restoration from back/forward cache (bfcache)
+        // This fires when navigating back/forward, even if DOMContentLoaded already fired
+        window.addEventListener('pageshow', function (event) {
+            // event.persisted is true when page is restored from bfcache
+            if (event.persisted) {
+                checkGameInProgress();
+            }
+        });
+
+        // Handle page visibility changes (tab switching, window focus)
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) {
+                checkGameInProgress();
+            }
         });
     </script>
 </body>
