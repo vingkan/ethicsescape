@@ -1010,9 +1010,11 @@ const UI = {
                     <pre class="custom-form-preview" style="background: var(--bg-darker); border: 2px solid var(--border-color); padding: 1.5rem; margin: 1rem 0; font-family: var(--font-body); white-space: pre-wrap;">
 ${safeContent}
                     </pre>
-                    <p style="margin-top: 1rem; color: var(--text-amber);">
-                        <strong>Show this form to the game facilitator to receive your outcome.</strong>
-                    </p>
+                    <div style="margin-top: 2rem;">
+                        <p>If your form did not explicitly disallow physical force or if it did not provide any other ways to get information out of the subject, then the agent resorted to physical force and Haven remained tight lipped, resulting in unsuccessful defense and the loss of 23 innocent lives due to the bombing.</p>
+                        <p>If your form did not explicitly disallow lying or if it did not provide any other ways to get information out of the subject, then the agent resorted to lying by telling Haven that other AFF members had pointed to him as the culprit, which Haven interpreted as the other AFF members protecting his father, causing him to remain silent and allowing the bombing to occur.</p>
+                        <p>If your form provided any ways to engage with Haven that could lead to learning more about his relationship with his father, then the agent was able to investigate the father, learn of his background, and intercept him before he could place the bomb.</p>
+                    </div>
                 </div>
             `;
         }
